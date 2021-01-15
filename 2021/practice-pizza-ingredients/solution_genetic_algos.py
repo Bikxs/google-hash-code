@@ -15,7 +15,10 @@ class Delivery:
             ingredients = []
             for pizza in pizzas:
                 ingredients.extend(pizza.ingredients)
-            self.value = len(set(ingredients))
+            self.value = len(set(ingredients)) ** 2
+            """For each delivery, the delivery score is the square of the total number of different ingredients of
+            all the pizzas in the delivery
+            """
 
     def __str__(self):
         pizzas_list = ' '.join([str(pizza.index) for pizza in self.pizzas])
@@ -72,5 +75,5 @@ if __name__ == '__main__':
         random_genome = generate_genome(problem)
         random_solution = [delivery for delivery in random_genome if delivery.value > 0]
         solution_value = sum([delivery.value for delivery in random_solution])
-        print(f"\tSolution Value: {solution_value}")
+        print(f"\tSolution Score: {solution_value}")
         output_solution(problem.name, solution=random_solution)
