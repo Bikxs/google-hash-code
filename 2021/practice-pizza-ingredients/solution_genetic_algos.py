@@ -1,5 +1,6 @@
 from random import choice
 
+from code_utils import make_code_zip
 from inputs import *
 
 OUTPUT_FOLDER = 'output'
@@ -67,7 +68,7 @@ def output_solution(name: Text, solution: Genome):
 
 if __name__ == '__main__':
     probs = problems()
-
+    make_code_zip(OUTPUT_FOLDER)
     for problem in probs:
         print(f"Problem:{problem.filename}")
         print(f"\tPizzas:{problem.M}")
