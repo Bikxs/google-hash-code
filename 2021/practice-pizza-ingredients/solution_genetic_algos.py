@@ -43,16 +43,19 @@ def generate_genome(problem: Problem) -> Genome:
     while pizzas and teams:
         team = choice(teams)
         teams.remove(team)
-        team_pizzas = []
-
-        # deliver randoms pizzas to team as long as they are available
-        for x in range(team.size):
-            pizza = choice(pizzas)
-            team_pizzas.append(pizza)
-            pizzas.remove(pizza)
-            if len(pizzas) == 0:
-                break
-        genome.append(Delivery(team=team, pizzas=team_pizzas))
+        if (team.size > len(pizzas)):
+            print("Not enough pizzas for team")
+            pass
+        else:
+            team_pizzas = []
+            # deliver randoms pizzas to team as long as they are available
+            for x in range(team.size):
+                pizza = choice(pizzas)
+                team_pizzas.append(pizza)
+                pizzas.remove(pizza)
+                if len(pizzas) == 0:
+                    break
+            genome.append(Delivery(team=team, pizzas=team_pizzas))
 
     return genome
 
