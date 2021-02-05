@@ -14,14 +14,6 @@ class Pizza:
         return f'{self.index} {self.number_of_ingredients} {self.ingredients}'
 
 
-class Team:
-    def __init__(self, size: int):
-        self.size = size
-
-    def __str__(self):
-        return f'T{self.size}'
-
-
 class Problem:
     def __init__(self, filename: string):
         self.filename = f"{INPUT_FOLDER}/{filename}"
@@ -49,10 +41,23 @@ class Problem:
                     pizza = Pizza(index=i - 1, number_of_ingredients=number_of_ingredients, ingredients=ingredients)
                     self.pizzas.append(pizza)
                 i += 1
-        self.teams = [Team(2) for x in range(T2)] + [Team(3) for x in range(T3)] + [Team(4) for x in range(T4)]
+
+        self.teams = []
+        self.team_sizes = []
+        self.team_count = T2 + T3 + T4
+        self.people = [x for x in range(T2 * 2 + T3 * 3 + T4 * 4)]
+        team_number = 0
+        for index, number in enumerate([T2, T3, T4]):
+            for _ in range(number):
+                self.teams.extend([team_number for _ in range(index + 2)])
+                self.team_sizes.append(index + 2)
+                team_number += 1
+        self.people_count = len(self.people)
+        self.pizza_count = len(self.pizzas)
+        self.T2, self.T3, self.T4 = T2, T3, T4
 
     def __str__(self):
-        return f'{self.filename}\n\tTeams:{self.teams[0]}x2,{self.teams[1]}x3,{self.teams[2]}x4, Pizzas:{self.M}'
+        return f'{self.filename}\n\tTeams:{self.T2}x2,{self.T3}x3,{self.T4}x4,\n\tPeople:{self.people_count}\n\tPizzas:{self.M}'
 
 
 filenames = ['a_example',
@@ -60,6 +65,8 @@ filenames = ['a_example',
              'c_many_ingredients.in',
              'd_many_pizzas.in',
              'e_many_teams.in']
+
+filenames = filenames[:3]
 
 
 def problems() -> List[Problem]:
