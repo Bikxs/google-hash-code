@@ -60,14 +60,5 @@ class Problem:
         return f'{self.filename}\n\tTeams:{self.T2}x2,{self.T3}x3,{self.T4}x4,\n\tPeople:{self.people_count}\n\tPizzas:{self.M}'
 
 
-filenames = ['a_example',
-             'b_little_bit_of_everything.in',
-             'c_many_ingredients.in',
-             'd_many_pizzas.in',
-             'e_many_teams.in']
-
-filenames = filenames[:3]
-
-
-def problems() -> List[Problem]:
-    return [Problem(filename) for filename in filenames]
+def read_problem(filename) -> Problem:
+    return Problem(filename)

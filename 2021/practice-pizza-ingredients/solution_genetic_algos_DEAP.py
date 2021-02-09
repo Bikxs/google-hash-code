@@ -1,5 +1,7 @@
+import warnings
 from random import sample
 
+warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
@@ -45,14 +47,47 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
+import matplotlib.pyplot as plt
+
+
+def plot(name, logbook):
+    # Genetic Algorithm is done - extract statistics:
+    max, avg, min = logbook.select("max", "avg", "min")
+
+    # plot statistics:
+    plt.figure()
+    ax = plt.subplot()
+
+    ax.plot(min, color='red', label='min')
+    ax.plot(avg, color='blue', label='avg')
+    ax.plot(max, color='green', label='max')
+    plt.xlabel('Generation')
+    plt.ylabel('Fitness')
+    plt.title(f'{name}\nFitness over Generations')
+    ax.legend(loc='best')
+    plt.show()
+
 
 if __name__ == '__main__':
-    probs = problems()
     make_code_zip(OUTPUT_FOLDER)
     print()
-    for problem in probs:
+    problems_meta = {'a': {'filename': 'a_example', 'max_generations': 20, 'population_size': 20},
+                     'b': {'filename': 'b_little_bit_of_everything.in', 'max_generations': 100, 'population_size': 50},
+                     'c': {'filename': 'c_many_ingredients.in', 'max_generations': 200, 'population_size': 100},
+                     'd': {'filename': 'd_many_pizzas.in', 'max_generations': 300, 'population_size': 100},
+                     'e': {'filename': 'e_many_teams.in', 'max_generations': 400, 'population_size': 100}}
+
+    for problem_meta in problems_meta.values():
+        problem = read_problem(problem_meta['filename'])
+
         print()
         print(problem)
+        NGEN = problem_meta['max_generations']
+        MU = problem_meta['population_size']
+        LAMBDA = MU * 2
+        CXPB = 0.7
+        MUTPB = 0.2
+        print(f"Population size: {MU}")
         num_genes = min(problem.people_count, problem.pizza_count)
 
 
@@ -87,6 +122,7 @@ if __name__ == '__main__':
                 deliveries.append(Delivery(team_size, team_pizzas))
             return deliveries
 
+
         def fitness_function(individual):
             deliveries = solution_from_ind(individual)
             return sum(delivery.value for delivery in deliveries),
@@ -97,13 +133,6 @@ if __name__ == '__main__':
         toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.3)
         toolbox.register("select", tools.selTournament, tournsize=3)
 
-        NGEN = 200
-        MU = 50
-        LAMBDA = 100
-        CXPB = 0.7
-        MUTPB = 0.2
-        print(f"Population size: {MU}")
-
         pop = toolbox.population(n=MU)
         hof = tools.ParetoFront()
         stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -113,12 +142,14 @@ if __name__ == '__main__':
         stats.register("min", np.min, axis=0)
         stats.register("max", np.max, axis=0)
 
-        algorithms.eaMuPlusLambda(pop, toolbox, MU, LAMBDA, CXPB, MUTPB, NGEN, stats,
-                                  halloffame=hof)
-        print(hof)
-        print(stats)
+        pop, logbook = algorithms.eaMuPlusLambda(pop, toolbox, MU, LAMBDA, CXPB, MUTPB, NGEN, stats,
+                                                 halloffame=hof)
+        # print(hof)
+        # print(stats)
         best_ind = tools.selBest(hof, 1)[0]
         print(f"\tBest Individual: {best_ind}")
         solution = solution_from_ind(best_ind)
         output_solution(name=problem.name, deliveries=solution)
-
+        # plot chart
+        plot(problem.name, logbook=logbook)
+        # save population
