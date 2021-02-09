@@ -18,26 +18,24 @@ class Delivery:
     def __init__(self, team_size: int, pizzas: List[Pizza]):
         self.team_size = team_size
         self.pizzas = [pizza for pizza in pizzas if pizzas != -1]
+        self.ingredients = []
         if len(pizzas) != team_size:
             self.value = 0
         else:
-            ingredients = []
             for pizza in pizzas:
-                ingredients.extend(pizza.ingredients)
-            self.value = len(set(ingredients)) ** 2
+                self.ingredients.extend(pizza.ingredients)
+            self.value = len(set(self.ingredients)) ** 2
             """For each delivery, the delivery score is the square of the total number of different ingredients of
             all the pizzas in the delivery
             """
+        self.pizza_indices = [pizza.index for pizza in self.pizzas]
 
     def __str__(self):
-        pizzas_list = ' '.join([str(pizza.index) for pizza in self.pizzas])
+        pizzas_list = ' '.join([str(pizza_index) for pizza_index in self.pizza_indices])
         return f'{self.team_size} {pizzas_list}'
 
 
-Genome = List[Delivery]
-
-
-def output_solution(name: Text, deliveries: Genome):
+def output_solution(name: Text, deliveries: List[Delivery]):
     output_filename = f"{OUTPUT_FOLDER}/{name}.out"
     with open(output_filename, 'w') as the_file:
         the_file.write(f"{len(deliveries)}\n")
@@ -71,14 +69,21 @@ def plot(name, logbook):
     plt.show()
 
 
+def divide_chunks(list, chunk_size):
+    # https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
+    # looping till length list
+    for i in range(0, len(list), chunk_size):
+        yield list[i:i + chunk_size]
+
+
 if __name__ == '__main__':
     make_code_zip(OUTPUT_FOLDER)
     print()
-    problems_meta = {  # 'a': {'filename': 'a_example', 'max_generations': 20, 'population_size': 20},
-        'b': {'filename': 'b_little_bit_of_everything.in', 'max_generations': 100, 'population_size': 50},
-        'c': {'filename': 'c_many_ingredients.in', 'max_generations': 200, 'population_size': 50},
-        'd': {'filename': 'd_many_pizzas.in', 'max_generations': 300, 'population_size': 100},
-        'e': {'filename': 'e_many_teams.in', 'max_generations': 400, 'population_size': 100}}
+    problems_meta = {  # 'a': {'filename': 'a_example', 'max_generations': 20, 'population_size': 10},
+        'b': {'filename': 'b_little_bit_of_everything.in', 'max_generations': 30, 'population_size': 20},
+        'c': {'filename': 'c_many_ingredients.in', 'max_generations': 40, 'population_size': 20},
+        'd': {'filename': 'd_many_pizzas.in', 'max_generations': 40, 'population_size': 20},
+        'e': {'filename': 'e_many_teams.in', 'max_generations': 40, 'population_size': 20}}
 
     for problem_meta in problems_meta.values():
         problem = read_problem(problem_meta['filename'])
@@ -94,7 +99,7 @@ if __name__ == '__main__':
         num_genes = min(problem.people_count, problem.pizza_count)
 
 
-        def generate_genome(ind_cls) -> Genome:
+        def generate_genome(ind_cls):
             all_pizzas = [x for x in range(problem.pizza_count)]
             return ind_cls(sample(all_pizzas, num_genes))
 
@@ -110,7 +115,7 @@ if __name__ == '__main__':
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 
-        def solution_from_ind(individual):
+        def deliveries_from_individual(individual):
             people = problem.people[:num_genes]
             teams = problem.teams[:num_genes]
 
@@ -128,7 +133,7 @@ if __name__ == '__main__':
 
 
         def fitness_function(individual):
-            deliveries = solution_from_ind(individual)
+            deliveries = deliveries_from_individual(individual)
             return sum(delivery.value for delivery in deliveries),
 
 
@@ -138,13 +143,12 @@ if __name__ == '__main__':
             probability of each attribute to be moved. Usually this mutation is applied on
             vector of indices.
 
+            This function then optimizes the individual groupings as per pizza problem
+
             :param individual: Individual to be mutated.
             :param indpb: Independent probability for each attribute to be exchanged to
                           another position.
             :returns: A tuple of one individual.
-
-            This function uses the :func:`~random.random` and :func:`~random.randint`
-            functions from the python base :mod:`random` module.
             """
             size = len(individual)
             for i in range(size):
@@ -157,7 +161,52 @@ if __name__ == '__main__':
                         individual[i] = individual[swap_indx]
                         individual[swap_indx] = temp_val
 
-            return individual,
+            # optimizaing
+            deliveries = deliveries_from_individual(individual)
+            chunks = divide_chunks(deliveries, chunk_size=100)
+            # let optimized every 10 deliveries
+            new_individual = []
+            for chunk in chunks:
+                for delivery in optimize_deliveries(chunk):
+                    new_individual.extend(delivery.pizza_indices)
+
+            return creator.Individual(new_individual),
+
+
+        def optimize_deliveries(deliveries: List[Delivery]) -> List[Delivery]:
+            def pizza_different_ingredients(ingredients1, ingredients2):
+                return len(set(ingredients1 + ingredients2))
+
+            # collect all pizzas
+            pizzas = {}
+            for delivery in deliveries:
+                for pizza in delivery.pizzas:
+                    pizzas[pizza.index] = pizza
+
+            new_deliveries = []
+            # assign_pizzas into deliveries
+            for delivery in deliveries:
+                new_delivery_pizzas = []
+                pizza_id = random.choice([x for x in pizzas.keys()])
+                new_pizza = pizzas[pizza_id]
+                del pizzas[pizza_id]
+
+                new_delivery_pizzas.append(new_pizza)
+                new_delivery_pizzas_ingredients = new_pizza.ingredients.copy()
+                for _ in range(len(delivery.pizzas) - 1):
+                    matches = [
+                        (pizza_different_ingredients(new_delivery_pizzas_ingredients, remaining_pizza.ingredients), key)
+                        for key, remaining_pizza in pizzas.items()]
+                    matches.sort(reverse=True)
+                    pizza_id = matches[0][1]
+                    new_pizza = pizzas[pizza_id]
+                    del pizzas[pizza_id]
+
+                    new_delivery_pizzas.append(new_pizza)
+                    new_delivery_pizzas_ingredients.extend(new_pizza.ingredients.copy())
+                new_delivery = Delivery(delivery.team_size, new_delivery_pizzas)
+                new_deliveries.append(new_delivery)
+            return new_deliveries
 
 
         def cxCycle(ind1, ind2):
@@ -219,7 +268,7 @@ if __name__ == '__main__':
         # print(stats)
         best_ind = tools.selBest(hof, 1)[0]
         print(f"\tBest Individual: {best_ind}")
-        solution = solution_from_ind(best_ind)
+        solution = deliveries_from_individual(best_ind)
         output_solution(name=problem.name, deliveries=solution)
         # plot chart
         plot(problem.name, logbook=logbook)
