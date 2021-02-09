@@ -1,6 +1,9 @@
 import warnings
 from random import sample
 
+from numpy import random
+from scoop import futures
+
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
@@ -71,11 +74,11 @@ def plot(name, logbook):
 if __name__ == '__main__':
     make_code_zip(OUTPUT_FOLDER)
     print()
-    problems_meta = {'a': {'filename': 'a_example', 'max_generations': 20, 'population_size': 20},
-                     'b': {'filename': 'b_little_bit_of_everything.in', 'max_generations': 100, 'population_size': 50},
-                     'c': {'filename': 'c_many_ingredients.in', 'max_generations': 200, 'population_size': 100},
-                     'd': {'filename': 'd_many_pizzas.in', 'max_generations': 300, 'population_size': 100},
-                     'e': {'filename': 'e_many_teams.in', 'max_generations': 400, 'population_size': 100}}
+    problems_meta = {  # 'a': {'filename': 'a_example', 'max_generations': 20, 'population_size': 20},
+        'b': {'filename': 'b_little_bit_of_everything.in', 'max_generations': 100, 'population_size': 50},
+        'c': {'filename': 'c_many_ingredients.in', 'max_generations': 200, 'population_size': 50},
+        'd': {'filename': 'd_many_pizzas.in', 'max_generations': 300, 'population_size': 100},
+        'e': {'filename': 'e_many_teams.in', 'max_generations': 400, 'population_size': 100}}
 
     for problem_meta in problems_meta.values():
         problem = read_problem(problem_meta['filename'])
@@ -85,8 +88,8 @@ if __name__ == '__main__':
         NGEN = problem_meta['max_generations']
         MU = problem_meta['population_size']
         LAMBDA = MU * 2
-        CXPB = 0.7
-        MUTPB = 0.2
+        CXPB = 0.2
+        MUTPB = 0.8
         print(f"Population size: {MU}")
         num_genes = min(problem.people_count, problem.pizza_count)
 
@@ -100,6 +103,7 @@ if __name__ == '__main__':
         creator.create("Individual", list, fitness=creator.FitnessMax)
 
         toolbox = base.Toolbox()
+        toolbox.register("map", futures.map)
 
         # Structure initializers
         toolbox.register("individual", generate_genome, creator.Individual)
@@ -128,10 +132,77 @@ if __name__ == '__main__':
             return sum(delivery.value for delivery in deliveries),
 
 
+        def mutShuffleIndexes(individual, indpb):
+            """Shuffle the attributes of the input individual and return the mutant.
+            The *individual* is expected to be a :term:`sequence`. The *indpb* argument is the
+            probability of each attribute to be moved. Usually this mutation is applied on
+            vector of indices.
+
+            :param individual: Individual to be mutated.
+            :param indpb: Independent probability for each attribute to be exchanged to
+                          another position.
+            :returns: A tuple of one individual.
+
+            This function uses the :func:`~random.random` and :func:`~random.randint`
+            functions from the python base :mod:`random` module.
+            """
+            size = len(individual)
+            for i in range(size):
+                if random.random() < indpb:
+                    swap_indx = random.randint(0, size)
+                    if swap_indx == i:
+                        pass
+                    else:
+                        temp_val = individual[i]
+                        individual[i] = individual[swap_indx]
+                        individual[swap_indx] = temp_val
+
+            return individual,
+
+
+        def cxCycle(ind1, ind2):
+            cycle_1 = list()
+            cycle_2 = list()
+            idx = 0
+
+            _ind1_set, _ind2_set = set(ind1), set(ind2)
+            intersection = list(_ind1_set & _ind2_set)
+            index_mappings = {index: ind1.index(value) for index, value in enumerate(ind2) if value in intersection}
+            in_ind1_not_in_ind2 = list(_ind1_set - _ind2_set)
+            in_ind2_not_in_ind1 = list(_ind2_set - _ind1_set)
+            random.shuffle(in_ind2_not_in_ind1)
+            differences = list(zip(in_ind1_not_in_ind2, in_ind2_not_in_ind1))
+            index_mappings.update({ind2.index(b): ind1.index(a) for a, b in differences})
+            # pprint(index_mappings)
+            while 1:
+                if idx in cycle_1:
+                    break
+                cycle_1.append(idx)
+                idx = index_mappings[idx]
+            left = [i for i in range(len(ind2)) if i not in cycle_1]
+            if len(left) != 0:
+                start = min(left)
+            else:
+                return ind1, ind2
+            idx = start
+            while 1:
+                if idx in cycle_2:
+                    break
+                cycle_2.append(idx)
+                idx = index_mappings[idx]
+            for i in cycle_2:
+                temp = ind2[i]
+                ind2[i] = ind1[i]
+                ind1[i] = temp
+            return ind1, ind2
+
+
         toolbox.register("evaluate", fitness_function)
-        toolbox.register("mate", tools.cxUniformPartialyMatched, indpb=0.5)
-        toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.3)
-        toolbox.register("select", tools.selTournament, tournsize=3)
+        # toolbox.register("mate", tools.cxUniformPartialyMatched, indpb=0.5)
+        toolbox.register("mate", cxCycle)
+        toolbox.register("mutate", mutShuffleIndexes, indpb=0.1)
+        toolbox.register("select", tools.selSPEA2)
+        # toolbox.register("select", tools.selRoulette)
 
         pop = toolbox.population(n=MU)
         hof = tools.ParetoFront()
