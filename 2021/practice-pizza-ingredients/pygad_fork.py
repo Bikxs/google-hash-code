@@ -55,42 +55,42 @@ class GA:
         The constructor of the GA class accepts all parameters required to create an instance of the GA class. It validates such parameters.
 
         num_generations: Number of generations.
-        num_parents_mating: Number of solutions to be selected as parents in the mating pool.
+        num_parents_mating: Number of solutions to be best_ind as parents in the mating pool.
 
-        fitness_func: Accepts a function that must accept 2 parameters (a single solution and its index in the population) and return the fitness value of the solution. Available starting from PyGAD 1.0.17 until 1.0.20 with a single parameter representing the solution. Changed in PyGAD 2.0.0 and higher to include the second parameter representing the solution index.
+        fitness_func: Accepts a function that must accept 2 parameters (a single individual and its index in the population) and return the fitness value of the individual. Available starting from PyGAD 1.0.17 until 1.0.20 with a single parameter representing the individual. Changed in PyGAD 2.0.0 and higher to include the second parameter representing the individual index.
 
         initial_population: A user-defined initial population. It is useful when the user wants to start the generations with a custom initial population. It defaults to None which means no initial population is specified by the user. In this case, PyGAD creates an initial population using the 'sol_per_pop' and 'num_genes' parameters. An exception is raised if the 'initial_population' is None while any of the 2 parameters ('sol_per_pop' or 'num_genes') is also None.
         sol_per_pop: Number of solutions in the population.
         num_genes: Number of parameters in the function.
 
-        init_range_low: The lower value of the random range from which the gene values in the initial population are selected. It defaults to -4. Available in PyGAD 1.0.20 and higher.
-        init_range_high: The upper value of the random range from which the gene values in the initial population are selected. It defaults to -4. Available in PyGAD 1.0.20.
+        init_range_low: The lower value of the random range from which the gene values in the initial population are best_ind. It defaults to -4. Available in PyGAD 1.0.20 and higher.
+        init_range_high: The upper value of the random range from which the gene values in the initial population are best_ind. It defaults to -4. Available in PyGAD 1.0.20.
         # It is OK to set the value of any of the 2 parameters ('init_range_high' and 'init_range_high') to be equal, higher or lower than the other parameter (i.e. init_range_low is not needed to be lower than init_range_high).
 
         gene_type: The type of the gene. It works only when the 'gene_space' parameter is None (i.e. the population is created randomly). It is assigned to any of these types (int, float, numpy.int, numpy.int8, numpy.int16, numpy.int32, numpy.int64, numpy.uint, numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64, numpy.float, numpy.float16, numpy.float32, numpy.float64) and forces all the genes to be of that type.
 
         parent_selection_type: Type of parent selection.
         keep_parents: If 0, this means no parent in the current population will be used in the next population. If -1, this means all parents in the current population will be used in the next population. If set to a value > 0, then the specified value refers to the number of parents in the current population to be used in the next population. For some parent selection operators like rank selection, the parents are of high quality and it is beneficial to keep them in the next generation. In some other parent selection operators like roulette wheel selection (RWS), it is not guranteed that the parents will be of high quality and thus keeping the parents might degarde the quality of the population.
-        K_tournament: When the value of 'parent_selection_type' is 'tournament', the 'K_tournament' parameter specifies the number of solutions from which a parent is selected randomly.
+        K_tournament: When the value of 'parent_selection_type' is 'tournament', the 'K_tournament' parameter specifies the number of solutions from which a parent is best_ind randomly.
 
         crossover_type: Type of the crossover opreator. If  crossover_type=None, then the crossover step is bypassed which means no crossover is applied and thus no offspring will be created in the next generations. The next generation will use the solutions in the current population.
-        crossover_probability: The probability of selecting a solution for the crossover operation. If the solution probability is <= crossover_probability, the solution is selected. The value must be between 0 and 1 inclusive.
+        crossover_probability: The probability of selecting a individual for the crossover operation. If the individual probability is <= crossover_probability, the individual is best_ind. The value must be between 0 and 1 inclusive.
 
         mutation_type: Type of the mutation opreator. If mutation_type=None, then the mutation step is bypassed which means no mutation is applied and thus no changes are applied to the offspring created using the crossover operation. The offspring will be used unchanged in the next generation.
-        mutation_probability: The probability of selecting a gene for the mutation operation. If the gene probability is <= mutation_probability, the gene is selected. It accepts either a single value for fixed mutation or a list/tuple/numpy.ndarray of 2 values for adaptive mutation. The values must be between 0 and 1 inclusive. If specified, then no need for the 2 parameters mutation_percent_genes and mutation_num_genes.
+        mutation_probability: The probability of selecting a gene for the mutation operation. If the gene probability is <= mutation_probability, the gene is best_ind. It accepts either a single value for fixed mutation or a list/tuple/numpy.ndarray of 2 values for adaptive mutation. The values must be between 0 and 1 inclusive. If specified, then no need for the 2 parameters mutation_percent_genes and mutation_num_genes.
 
-        mutation_by_replacement: An optional bool parameter. It works only when the selected type of mutation is random (mutation_type="random"). In this case, setting mutation_by_replacement=True means replace the gene by the randomly generated value. If False, then it has no effect and random mutation works by adding the random value to the gene.
+        mutation_by_replacement: An optional bool parameter. It works only when the best_ind type of mutation is random (mutation_type="random"). In this case, setting mutation_by_replacement=True means replace the gene by the randomly generated value. If False, then it has no effect and random mutation works by adding the random value to the gene.
 
         mutation_percent_genes: Percentage of genes to mutate which defaults to the string 'default' which means 10%. This parameter has no action if any of the 2 parameters mutation_probability or mutation_num_genes exist.
         mutation_num_genes: Number of genes to mutate which defaults to None. If the parameter mutation_num_genes exists, then no need for the parameter mutation_percent_genes. This parameter has no action if the mutation_probability parameter exists.
-        random_mutation_min_val: The minimum value of the range from which a random value is selected to be added to the selected gene(s) to mutate. It defaults to -1.0.
-        random_mutation_max_val: The maximum value of the range from which a random value is selected to be added to the selected gene(s) to mutate. It defaults to 1.0.
+        random_mutation_min_val: The minimum value of the range from which a random value is best_ind to be added to the best_ind gene(s) to mutate. It defaults to -1.0.
+        random_mutation_max_val: The maximum value of the range from which a random value is best_ind to be added to the best_ind gene(s) to mutate. It defaults to 1.0.
 
         gene_space: It accepts a list of all possible values of the gene. This list is used in the mutation step. Should be used only if the gene space is a set of discrete values. No need for the 2 parameters (random_mutation_min_val and random_mutation_max_val) if the parameter gene_space exists. Added in PyGAD 2.5.0.
 
         on_start: Accepts a function to be called only once before the genetic algorithm starts its evolution. This function must accept a single parameter representing the instance of the genetic algorithm. Added in PyGAD 2.6.0.
         on_fitness: Accepts a function to be called after calculating the fitness values of all solutions in the population. This function must accept 2 parameters: the first one represents the instance of the genetic algorithm and the second one is a list of all solutions' fitness values. Added in PyGAD 2.6.0.
-        on_parents: Accepts a function to be called after selecting the parents that mates. This function must accept 2 parameters: the first one represents the instance of the genetic algorithm and the second one represents the selected parents. Added in PyGAD 2.6.0.
+        on_parents: Accepts a function to be called after selecting the parents that mates. This function must accept 2 parameters: the first one represents the instance of the genetic algorithm and the second one represents the best_ind parents. Added in PyGAD 2.6.0.
         on_crossover: Accepts a function to be called each time the crossover operation is applied. This function must accept 2 parameters: the first one represents the instance of the genetic algorithm and the second one represents the offspring generated using crossover. Added in PyGAD 2.6.0.
         on_mutation: Accepts a function to be called each time the mutation operation is applied. This function must accept 2 parameters: the first one represents the instance of the genetic algorithm and the second one represents the offspring after applying the mutation. Added in PyGAD 2.6.0.
         callback_generation: Accepts a function to be called after each generation. This function must accept a single parameter representing the instance of the genetic algorithm. If the function returned "stop", then the run() method stops without completing the other generations. Starting from PyGAD 2.6.0, the callback_generation parameter is deprecated and should be replaced by the on_generation parameter.
@@ -99,7 +99,7 @@ class GA:
 
         delay_after_gen: Added in PyGAD 2.4.0. It accepts a non-negative number specifying the number of seconds to wait after a generation completes and before going to the next generation. It defaults to 0.0 which means no delay after the generation.
 
-        save_best_solutions: Added in PyGAD 2.9.0 and its type is bool. If True, then the best solution in each generation is saved into the 'best_solutions' attribute. Use this parameter with caution as it may cause memory overflow when either the number of generations or the number of genes is large.
+        save_best_solutions: Added in PyGAD 2.9.0 and its type is bool. If True, then the best individual in each generation is saved into the 'best_solutions' attribute. Use this parameter with caution as it may cause memory overflow when either the number of generations or the number of genes is large.
 
         suppress_warnings: Added in PyGAD 2.10.0 and its type is bool. If True, then no warning messages will be displayed. It defaults to False.
         """
@@ -185,7 +185,7 @@ class GA:
                 if sol_per_pop <= 0:
                     self.valid_parameters = False
                     raise ValueError(
-                        "The number of solutions in the population (sol_per_pop) must be > 0 but ({sol_per_pop}) found. \nThe following parameters must be > 0: \n1) Population size (i.e. number of solutions per population) (sol_per_pop).\n2) Number of selected parents in the mating pool (num_parents_mating).\n".format(
+                        "The number of solutions in the population (sol_per_pop) must be > 0 but ({sol_per_pop}) found. \nThe following parameters must be > 0: \n1) Population size (i.e. number of solutions per population) (sol_per_pop).\n2) Number of best_ind parents in the mating pool (num_parents_mating).\n".format(
                             sol_per_pop=sol_per_pop))
                 # Validating the number of gene.
                 if (num_genes <= 0):
@@ -194,7 +194,7 @@ class GA:
                         "The number of genes cannot be <= 0 but ({num_genes}) found.\n".format(num_genes=num_genes))
                 # When initial_population=None and the 2 parameters sol_per_pop and num_genes have valid integer values, then the initial population is created.
                 # Inside the initialize_population() method, the initial_population attribute is assigned to keep the initial population accessible.
-                self.num_genes = num_genes  # Number of genes in the solution.
+                self.num_genes = num_genes  # Number of genes in the individual.
                 self.sol_per_pop = sol_per_pop  # Number of solutions in the population.
                 self.initialize_population(self.init_range_low, self.init_range_high)
             else:
@@ -208,18 +208,18 @@ class GA:
         else:
             self.initial_population = numpy.array(initial_population)
             self.population = self.initial_population.copy()  # A NumPy array holding the initial population.
-            self.num_genes = self.initial_population.shape[1]  # Number of genes in the solution.
+            self.num_genes = self.initial_population.shape[1]  # Number of genes in the individual.
             self.sol_per_pop = self.initial_population.shape[0]  # Number of solutions in the population.
             self.pop_size = (self.sol_per_pop, self.num_genes)  # The population size.
 
-        # Validating the number of parents to be selected for mating (num_parents_mating)
+        # Validating the number of parents to be best_ind for mating (num_parents_mating)
         if num_parents_mating <= 0:
             self.valid_parameters = False
             raise ValueError(
-                "The number of parents mating (num_parents_mating) parameter must be > 0 but ({num_parents_mating}) found. \nThe following parameters must be > 0: \n1) Population size (i.e. number of solutions per population) (sol_per_pop).\n2) Number of selected parents in the mating pool (num_parents_mating).\n".format(
+                "The number of parents mating (num_parents_mating) parameter must be > 0 but ({num_parents_mating}) found. \nThe following parameters must be > 0: \n1) Population size (i.e. number of solutions per population) (sol_per_pop).\n2) Number of best_ind parents in the mating pool (num_parents_mating).\n".format(
                     num_parents_mating=num_parents_mating))
 
-        # Validating the number of parents to be selected for mating: num_parents_mating
+        # Validating the number of parents to be best_ind for mating: num_parents_mating
         if (num_parents_mating > self.sol_per_pop):
             self.valid_parameters = False
             raise ValueError(
@@ -228,7 +228,7 @@ class GA:
 
         self.num_parents_mating = num_parents_mating
 
-        # crossover: Refers to the method that applies the crossover operator based on the selected type of crossover in the crossover_type property.
+        # crossover: Refers to the method that applies the crossover operator based on the best_ind type of crossover in the crossover_type property.
         # Validating the crossover type: crossover_type
         if (crossover_type == "single_point"):
             self.crossover = self.single_point_crossover
@@ -270,7 +270,7 @@ class GA:
                     crossover_probability_value=crossover_probability,
                     crossover_probability_type=type(crossover_probability)))
 
-        # mutation: Refers to the method that applies the mutation operator based on the selected type of mutation in the mutation_type property.
+        # mutation: Refers to the method that applies the mutation operator based on the best_ind type of mutation in the mutation_type property.
         # Validating the mutation type: mutation_type
         # "adaptive" mutation is supported starting from PyGAD 2.10.0
         if (mutation_type == "random"):
@@ -365,7 +365,7 @@ class GA:
                         mutation_percent_genes = 10
                         # Based on the mutation percentage in the 'mutation_percent_genes' parameter, the number of genes to mutate is calculated.
                         mutation_num_genes = numpy.uint32((mutation_percent_genes * self.num_genes) / 100)
-                        # Based on the mutation percentage of genes, if the number of selected genes for mutation is less than the least possible value which is 1, then the number will be set to 1.
+                        # Based on the mutation percentage of genes, if the number of best_ind genes for mutation is less than the least possible value which is 1, then the number will be set to 1.
                         if mutation_num_genes == 0:
                             if self.mutation_probability is None:
                                 if not self.suppress_warnings: warnings.warn(
@@ -380,7 +380,7 @@ class GA:
                         if (mutation_percent_genes <= 0 or mutation_percent_genes > 100):
                             self.valid_parameters = False
                             raise ValueError(
-                                "The percentage of selected genes for mutation (mutation_percent_genes) must be > 0 and <= 100 but ({mutation_percent_genes}) found.\n".format(
+                                "The percentage of best_ind genes for mutation (mutation_percent_genes) must be > 0 and <= 100 but ({mutation_percent_genes}) found.\n".format(
                                     mutation_percent_genes=mutation_percent_genes))
                         else:
                             # If mutation_percent_genes equals the string "default", then it is replaced by the numeric value 10.
@@ -389,7 +389,7 @@ class GA:
 
                             # Based on the mutation percentage in the 'mutation_percent_genes' parameter, the number of genes to mutate is calculated.
                             mutation_num_genes = numpy.uint32((mutation_percent_genes * self.num_genes) / 100)
-                            # Based on the mutation percentage of genes, if the number of selected genes for mutation is less than the least possible value which is 1, then the number will be set to 1.
+                            # Based on the mutation percentage of genes, if the number of best_ind genes for mutation is less than the least possible value which is 1, then the number will be set to 1.
                             if mutation_num_genes == 0:
                                 if self.mutation_probability is None:
                                     if not self.suppress_warnings: warnings.warn(
@@ -425,7 +425,7 @@ class GA:
                                 # Based on the mutation percentage in the 'mutation_percent_genes' parameter, the number of genes to mutate is calculated.
                                 mutation_num_genes[idx] = numpy.uint32(
                                     (mutation_percent_genes[idx] * self.num_genes) / 100)
-                                # Based on the mutation percentage of genes, if the number of selected genes for mutation is less than the least possible value which is 1, then the number will be set to 1.
+                                # Based on the mutation percentage of genes, if the number of best_ind genes for mutation is less than the least possible value which is 1, then the number will be set to 1.
                                 if mutation_num_genes[idx] == 0:
                                     if not self.suppress_warnings: warnings.warn(
                                         "The percentage of genes to mutate ({mutation_percent}) resutled in selecting ({mutation_num}) genes. The number of genes to mutate is set to 1 (mutation_num_genes=1).\nIf you do not want to mutate any gene, please set mutation_type=None.".format(
@@ -457,12 +457,12 @@ class GA:
                     if (mutation_num_genes <= 0):
                         self.valid_parameters = False
                         raise ValueError(
-                            "The number of selected genes for mutation (mutation_num_genes) cannot be <= 0 but ({mutation_num_genes}) found. If you do not want to use mutation, please set mutation_type=None\n".format(
+                            "The number of best_ind genes for mutation (mutation_num_genes) cannot be <= 0 but ({mutation_num_genes}) found. If you do not want to use mutation, please set mutation_type=None\n".format(
                                 mutation_num_genes=mutation_num_genes))
                     elif (mutation_num_genes > self.num_genes):
                         self.valid_parameters = False
                         raise ValueError(
-                            "The number of selected genes for mutation (mutation_num_genes), which is ({mutation_num_genes}), cannot be greater than the number of genes ({num_genes}).\n".format(
+                            "The number of best_ind genes for mutation (mutation_num_genes), which is ({mutation_num_genes}), cannot be greater than the number of genes ({num_genes}).\n".format(
                                 mutation_num_genes=mutation_num_genes, num_genes=self.num_genes))
                 else:
                     self.valid_parameters = False
@@ -527,10 +527,10 @@ class GA:
 
         if (self.mutation_type is None) and (self.crossover_type is None):
             if not self.suppress_warnings: warnings.warn(
-                "The 2 parameters mutation_type and crossover_type are None. This disables any type of evolution the genetic algorithm can make. As a result, the genetic algorithm cannot find a better solution that the best solution in the initial population.")
+                "The 2 parameters mutation_type and crossover_type are None. This disables any type of evolution the genetic algorithm can make. As a result, the genetic algorithm cannot find a better individual that the best individual in the initial population.")
 
         # select_parents: Refers to a method that selects the parents based on the parent selection type specified in the parent_selection_type attribute.
-        # Validating the selected type of parent selection: parent_selection_type
+        # Validating the best_ind type of parent selection: parent_selection_type
         if (parent_selection_type == "sss"):
             self.select_parents = self.steady_state_selection
         elif (parent_selection_type == "rws"):
@@ -590,7 +590,7 @@ class GA:
             else:
                 self.valid_parameters = False
                 raise ValueError(
-                    "The fitness function must accept 2 parameters representing the solution to which the fitness value is calculated and the solution index within the population.\nThe passed fitness function named '{funcname}' accepts {argcount} argument(s).".format(
+                    "The fitness function must accept 2 parameters representing the individual to which the fitness value is calculated and the individual index within the population.\nThe passed fitness function named '{funcname}' accepts {argcount} argument(s).".format(
                         funcname=fitness_func.__code__.co_name, argcount=fitness_func.__code__.co_argcount))
         else:
             self.valid_parameters = False
@@ -807,20 +807,20 @@ class GA:
         self.random_mutation_max_val = random_mutation_max_val
 
         # Even such this parameter is declared in the class header, it is assigned to the object here to access it after saving the object.
-        self.best_solutions_fitness = []  # A list holding the fitness value of the best solution for each generation.
+        self.best_solutions_fitness = []  # A list holding the fitness value of the best individual for each generation.
 
         self.best_solution_generation = -1  # The generation number at which the best fitness value is reached. It is only assigned the generation number after the `run()` method completes. Otherwise, its value is -1.
 
         self.save_best_solutions = save_best_solutions
-        self.best_solutions = []  # Holds the best solution in each generation.
+        self.best_solutions = []  # Holds the best individual in each generation.
 
     def initialize_population(self, low, high):
 
         """
         Creates an initial population randomly as a NumPy array. The array is saved in the instance attribute named 'population'.
 
-        low: The lower value of the random range from which the gene values in the initial population are selected. It defaults to -4. Available in PyGAD 1.0.20 and higher.
-        high: The upper value of the random range from which the gene values in the initial population are selected. It defaults to -4. Available in PyGAD 1.0.20.
+        low: The lower value of the random range from which the gene values in the initial population are best_ind. It defaults to -4. Available in PyGAD 1.0.20 and higher.
+        high: The upper value of the random range from which the gene values in the initial population are best_ind. It defaults to -4. Available in PyGAD 1.0.20.
 
         This method assigns the values of the following 3 instance attributes:
             1. pop_size: Size of the population.
@@ -890,7 +890,7 @@ class GA:
                 "ERROR calling the cal_pop_fitness() method: \nPlease check the parameters passed while creating an instance of the GA class.\n")
 
         pop_fitness = []
-        # Calculating the fitness value of each solution in the current population.
+        # Calculating the fitness value of each individual in the current population.
         for sol_idx, sol in enumerate(self.population):
             fitness = self.fitness_func(sol, sol_idx)
             pop_fitness.append(fitness)
@@ -920,10 +920,10 @@ class GA:
 
             best_solution, best_solution_fitness, best_match_idx = self.best_solution(pop_fitness=fitness)
 
-            # Appending the fitness value of the best solution in the current generation to the best_solutions_fitness attribute.
+            # Appending the fitness value of the best individual in the current generation to the best_solutions_fitness attribute.
             self.best_solutions_fitness.append(best_solution_fitness)
 
-            # Appending the best solution to the best_solutions list.
+            # Appending the best individual to the best_solutions list.
             if self.save_best_solutions:
                 self.best_solutions.append(best_solution)
 
@@ -972,7 +972,7 @@ class GA:
             if not (self.on_generation is None):
                 r = self.on_generation(self)
                 if type(r) is str and r.lower() == "stop":
-                    # Before aborting the loop, save the fitness value of the best solution.
+                    # Before aborting the loop, save the fitness value of the best individual.
                     _, best_solution_fitness, _ = self.best_solution()
                     self.best_solutions_fitness.append(best_solution_fitness)
                     break
@@ -980,7 +980,7 @@ class GA:
             time.sleep(self.delay_after_gen)
 
         last_gen_fitness = self.cal_pop_fitness()
-        # Save the fitness value of the best solution.
+        # Save the fitness value of the best individual.
         _, best_solution_fitness, _ = self.best_solution(pop_fitness=last_gen_fitness)
         self.best_solutions_fitness.append(best_solution_fitness)
 
@@ -1003,8 +1003,8 @@ class GA:
         Selects the parents using the steady-state selection technique. Later, these parents will mate to produce the offspring.
         It accepts 2 parameters:
             -fitness: The fitness values of the solutions in the current population.
-            -num_parents: The number of parents to be selected.
-        It returns an array of the selected parents.
+            -num_parents: The number of parents to be best_ind.
+        It returns an array of the best_ind parents.
         """
 
         fitness_sorted = sorted(range(len(fitness)), key=lambda k: fitness[k])
@@ -1021,8 +1021,8 @@ class GA:
         Selects the parents using the rank selection technique. Later, these parents will mate to produce the offspring.
         It accepts 2 parameters:
             -fitness: The fitness values of the solutions in the current population.
-            -num_parents: The number of parents to be selected.
-        It returns an array of the selected parents.
+            -num_parents: The number of parents to be best_ind.
+        It returns an array of the best_ind parents.
         """
 
         fitness_sorted = sorted(range(len(fitness)), key=lambda k: fitness[k])
@@ -1039,8 +1039,8 @@ class GA:
         Selects the parents randomly. Later, these parents will mate to produce the offspring.
         It accepts 2 parameters:
             -fitness: The fitness values of the solutions in the current population.
-            -num_parents: The number of parents to be selected.
-        It returns an array of the selected parents.
+            -num_parents: The number of parents to be best_ind.
+        It returns an array of the best_ind parents.
         """
 
         parents = numpy.empty((num_parents, self.population.shape[1]))
@@ -1057,8 +1057,8 @@ class GA:
         Selects the parents using the tournament selection technique. Later, these parents will mate to produce the offspring.
         It accepts 2 parameters:
             -fitness: The fitness values of the solutions in the current population.
-            -num_parents: The number of parents to be selected.
-        It returns an array of the selected parents.
+            -num_parents: The number of parents to be best_ind.
+        It returns an array of the best_ind parents.
         """
 
         parents = numpy.empty((num_parents, self.population.shape[1]))
@@ -1075,8 +1075,8 @@ class GA:
         Selects the parents using the roulette wheel selection technique. Later, these parents will mate to produce the offspring.
         It accepts 2 parameters:
             -fitness: The fitness values of the solutions in the current population.
-            -num_parents: The number of parents to be selected.
-        It returns an array of the selected parents.
+            -num_parents: The number of parents to be best_ind.
+        It returns an array of the best_ind parents.
         """
 
         fitness_sum = numpy.sum(fitness)
@@ -1112,8 +1112,8 @@ class GA:
         Selects the parents using the stochastic universal selection technique. Later, these parents will mate to produce the offspring.
         It accepts 2 parameters:
             -fitness: The fitness values of the solutions in the current population.
-            -num_parents: The number of parents to be selected.
-        It returns an array of the selected parents.
+            -num_parents: The number of parents to be best_ind.
+        It returns an array of the best_ind parents.
         """
 
         fitness_sum = numpy.sum(fitness)
@@ -1166,7 +1166,7 @@ class GA:
                 probs = numpy.random.random(size=parents.shape[0])
                 indices = numpy.where(probs <= self.crossover_probability)[0]
 
-                # If no parent satisfied the probability, no crossover is applied and a parent is selected.
+                # If no parent satisfied the probability, no crossover is applied and a parent is best_ind.
                 if len(indices) == 0:
                     offspring[k, :] = parents[k % parents.shape[0], :]
                     continue
@@ -1215,7 +1215,7 @@ class GA:
                 probs = numpy.random.random(size=parents.shape[0])
                 indices = numpy.where(probs <= self.crossover_probability)[0]
 
-                # If no parent satisfied the probability, no crossover is applied and a parent is selected.
+                # If no parent satisfied the probability, no crossover is applied and a parent is best_ind.
                 if len(indices) == 0:
                     offspring[k, :] = parents[k % parents.shape[0], :]
                     continue
@@ -1243,7 +1243,7 @@ class GA:
     def uniform_crossover(self, parents, offspring_size):
 
         """
-        Applies the uniform crossover. For each gene, a parent out of the 2 mating parents is selected randomly and the gene is copied from it.
+        Applies the uniform crossover. For each gene, a parent out of the 2 mating parents is best_ind randomly and the gene is copied from it.
         It accepts 2 parameters:
             -parents: The parents to mate for producing the offspring.
             -offspring_size: The size of the offspring to produce.
@@ -1257,7 +1257,7 @@ class GA:
                 probs = numpy.random.random(size=parents.shape[0])
                 indices = numpy.where(probs <= self.crossover_probability)[0]
 
-                # If no parent satisfied the probability, no crossover is applied and a parent is selected.
+                # If no parent satisfied the probability, no crossover is applied and a parent is best_ind.
                 if len(indices) == 0:
                     offspring[k, :] = parents[k % parents.shape[0], :]
                     continue
@@ -1372,7 +1372,7 @@ class GA:
                 probs = numpy.random.random(size=parents.shape[0])
                 indices = numpy.where(probs <= self.crossover_probability)[0]
 
-                # If no parent satisfied the probability, no crossover is applied and a parent is selected.
+                # If no parent satisfied the probability, no crossover is applied and a parent is best_ind.
                 if len(indices) == 0:
                     offspring[k, :] = parents[k % parents.shape[0], :]
                     continue
@@ -1399,26 +1399,26 @@ class GA:
 
         """
         Applies the random mutation which changes the values of a number of genes randomly.
-        The random value is selected either using the 'gene_space' parameter or the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
+        The random value is best_ind either using the 'gene_space' parameter or the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
         """
 
-        # If the mutation values are selected from the mutation space, the attribute 'gene_space' is not None. Otherwise, it is None.
+        # If the mutation values are best_ind from the mutation space, the attribute 'gene_space' is not None. Otherwise, it is None.
         # When the 'mutation_probability' parameter exists (i.e. not None), then it is used in the mutation. Otherwise, the 'mutation_num_genes' parameter is used.
 
         if self.mutation_probability is None:
             # When the 'mutation_probability' parameter does not exist (i.e. None), then the parameter 'mutation_num_genes' is used in the mutation.
             if not (self.gene_space is None):
-                # When the attribute 'gene_space' exists (i.e. not None), the mutation values are selected randomly from the space of values of each gene.
+                # When the attribute 'gene_space' exists (i.e. not None), the mutation values are best_ind randomly from the space of values of each gene.
                 offspring = self.mutation_by_space(offspring)
             else:
                 offspring = self.mutation_randomly(offspring)
         else:
             # When the 'mutation_probability' parameter exists (i.e. not None), then it is used in the mutation.
             if self.gene_space != None:
-                # When the attribute 'gene_space' does not exist (i.e. None), the mutation values are selected randomly based on the continuous range specified by the 2 attributes 'random_mutation_min_val' and 'random_mutation_max_val'.
+                # When the attribute 'gene_space' does not exist (i.e. None), the mutation values are best_ind randomly based on the continuous range specified by the 2 attributes 'random_mutation_min_val' and 'random_mutation_max_val'.
                 offspring = self.mutation_probs_by_space(offspring)
             else:
                 offspring = self.mutation_probs_randomly(offspring)
@@ -1434,7 +1434,7 @@ class GA:
         It returns an array of the mutated offspring using the mutation space.
         """
 
-        # For each offspring, a value from the gene space is selected randomly and assigned to the selected mutated gene.
+        # For each offspring, a value from the gene space is best_ind randomly and assigned to the best_ind mutated gene.
         for offspring_idx in range(offspring.shape[0]):
             mutation_indices = numpy.array(random.sample(range(0, self.num_genes), self.mutation_num_genes))
             for gene_idx in mutation_indices:
@@ -1465,7 +1465,7 @@ class GA:
                     # Selecting a value randomly from the global gene space in the 'gene_space' attribute.
                     value_from_space = random.choice(self.gene_space)
 
-                # Assinging the selected value from the space to the gene.
+                # Assinging the best_ind value from the space to the gene.
                 offspring[offspring_idx, gene_idx] = self.gene_type(value_from_space)
 
         return offspring
@@ -1479,7 +1479,7 @@ class GA:
         It returns an array of the mutated offspring using the mutation space.
         """
 
-        # For each offspring, a value from the gene space is selected randomly and assigned to the selected mutated gene.
+        # For each offspring, a value from the gene space is best_ind randomly and assigned to the best_ind mutated gene.
         for offspring_idx in range(offspring.shape[0]):
             probs = numpy.random.random(size=offspring.shape[1])
             for gene_idx in range(offspring.shape[1]):
@@ -1510,7 +1510,7 @@ class GA:
                         # Selecting a value randomly from the global gene space in the 'gene_space' attribute.
                         value_from_space = random.choice(self.gene_space)
 
-                    # Assinging the selected value from the space to the gene.
+                    # Assinging the best_ind value from the space to the gene.
                     offspring[offspring_idx, gene_idx] = self.gene_type(value_from_space)
 
         return offspring
@@ -1571,7 +1571,7 @@ class GA:
     def swap_mutation(self, offspring):
 
         """
-        Applies the swap mutation which interchanges the values of 2 randomly selected genes.
+        Applies the swap mutation which interchanges the values of 2 randomly best_ind genes.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
@@ -1589,7 +1589,7 @@ class GA:
     def swap_mutation2(self, offspring):
 
         """
-        Applies the swap mutation which interchanges the values of 2 randomly selected genes.
+        Applies the swap mutation which interchanges the values of 2 randomly best_ind genes.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
@@ -1668,31 +1668,31 @@ class GA:
     def adaptive_mutation(self, offspring):
 
         """
-        Applies the adaptive mutation which changes the values of a number of genes randomly. In adaptive mutation, the number of genes to mutate differs based on the fitness value of the solution.
-        The random value is selected either using the 'gene_space' parameter or the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
+        Applies the adaptive mutation which changes the values of a number of genes randomly. In adaptive mutation, the number of genes to mutate differs based on the fitness value of the individual.
+        The random value is best_ind either using the 'gene_space' parameter or the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
         """
 
-        # If the attribute 'gene_space' exists (i.e. not None), then the mutation values are selected from the 'gene_space' parameter according to the space of values of each gene. Otherwise, it is selected randomly based on the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
+        # If the attribute 'gene_space' exists (i.e. not None), then the mutation values are best_ind from the 'gene_space' parameter according to the space of values of each gene. Otherwise, it is best_ind randomly based on the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
         # When the 'mutation_probability' parameter exists (i.e. not None), then it is used in the mutation. Otherwise, the 'mutation_num_genes' parameter is used.
 
         if self.mutation_probability is None:
             # When the 'mutation_probability' parameter does not exist (i.e. None), then the parameter 'mutation_num_genes' is used in the mutation.
             if not (self.gene_space is None):
-                # When the attribute 'gene_space' exists (i.e. not None), the mutation values are selected randomly from the space of values of each gene.
+                # When the attribute 'gene_space' exists (i.e. not None), the mutation values are best_ind randomly from the space of values of each gene.
                 offspring = self.adaptive_mutation_by_space(offspring)
             else:
-                # When the attribute 'gene_space' does not exist (i.e. None), the mutation values are selected randomly based on the continuous range specified by the 2 attributes 'random_mutation_min_val' and 'random_mutation_max_val'.
+                # When the attribute 'gene_space' does not exist (i.e. None), the mutation values are best_ind randomly based on the continuous range specified by the 2 attributes 'random_mutation_min_val' and 'random_mutation_max_val'.
                 offspring = self.adaptive_mutation_randomly(offspring)
         else:
             # When the 'mutation_probability' parameter exists (i.e. not None), then it is used in the mutation.
             if self.gene_space != None:
-                # When the attribute 'gene_space' exists (i.e. not None), the mutation values are selected randomly from the space of values of each gene.
+                # When the attribute 'gene_space' exists (i.e. not None), the mutation values are best_ind randomly from the space of values of each gene.
                 offspring = self.adaptive_mutation_probs_by_space(offspring)
             else:
-                # When the attribute 'gene_space' does not exist (i.e. None), the mutation values are selected randomly based on the continuous range specified by the 2 attributes 'random_mutation_min_val' and 'random_mutation_max_val'.
+                # When the attribute 'gene_space' does not exist (i.e. None), the mutation values are best_ind randomly based on the continuous range specified by the 2 attributes 'random_mutation_min_val' and 'random_mutation_max_val'.
                 offspring = self.adaptive_mutation_probs_randomly(offspring)
 
         return offspring
@@ -1701,19 +1701,19 @@ class GA:
 
         """
         Applies the adaptive mutation based on the 2 parameters 'mutation_num_genes' and 'gene_space'.
-        A number of genes equal are selected randomly for mutation. This number depends on the fitness of the solution.
-        The random values are selected from the 'gene_space' parameter.
+        A number of genes equal are best_ind randomly for mutation. This number depends on the fitness of the individual.
+        The random values are best_ind from the 'gene_space' parameter.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
         """
 
-        # For each offspring, a value from the gene space is selected randomly and assigned to the selected gene for mutation.
+        # For each offspring, a value from the gene space is best_ind randomly and assigned to the best_ind gene for mutation.
 
         average_fitness, offspring_fitness = self.adaptive_mutation_population_fitness(offspring)
 
         # Adaptive mutation changes one or more genes in each offspring randomly.
-        # The number of genes to mutate depends on the solution's fitness value.
+        # The number of genes to mutate depends on the individual's fitness value.
         for offspring_idx in range(offspring.shape[0]):
             if offspring_fitness[offspring_idx] < average_fitness:
                 adaptive_mutation_num_genes = self.mutation_num_genes[0]
@@ -1748,7 +1748,7 @@ class GA:
                     # Selecting a value randomly from the global gene space in the 'gene_space' attribute.
                     value_from_space = random.choice(self.gene_space)
 
-                # Assinging the selected value from the space to the gene.
+                # Assinging the best_ind value from the space to the gene.
                 offspring[offspring_idx, gene_idx] = self.gene_type(value_from_space)
 
         return offspring
@@ -1757,8 +1757,8 @@ class GA:
 
         """
         Applies the adaptive mutation based on the 'mutation_num_genes' parameter.
-        A number of genes equal are selected randomly for mutation. This number depends on the fitness of the solution.
-        The random values are selected based on the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
+        A number of genes equal are best_ind randomly for mutation. This number depends on the fitness of the individual.
+        The random values are best_ind based on the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
@@ -1767,7 +1767,7 @@ class GA:
         average_fitness, offspring_fitness = self.adaptive_mutation_population_fitness(offspring)
 
         # Adaptive random mutation changes one or more genes in each offspring randomly.
-        # The number of genes to mutate depends on the solution's fitness value.
+        # The number of genes to mutate depends on the individual's fitness value.
         for offspring_idx in range(offspring.shape[0]):
             if offspring_fitness[offspring_idx] < average_fitness:
                 adaptive_mutation_num_genes = self.mutation_num_genes[0]
@@ -1792,19 +1792,19 @@ class GA:
 
         """
         Applies the adaptive mutation based on the 2 parameters 'mutation_probability' and 'gene_space'.
-        Based on whether the solution fitness is above or below a threshold, the mutation is applied diffrently by mutating high or low number of genes.
-        The random values are selected based on space of values for each gene.
+        Based on whether the individual fitness is above or below a threshold, the mutation is applied diffrently by mutating high or low number of genes.
+        The random values are best_ind based on space of values for each gene.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
         """
 
-        # For each offspring, a value from the gene space is selected randomly and assigned to the selected gene for mutation.
+        # For each offspring, a value from the gene space is best_ind randomly and assigned to the best_ind gene for mutation.
 
         average_fitness, offspring_fitness = self.adaptive_mutation_population_fitness(offspring)
 
         # Adaptive random mutation changes one or more genes in each offspring randomly.
-        # The probability of mutating a gene depends on the solution's fitness value.
+        # The probability of mutating a gene depends on the individual's fitness value.
         for offspring_idx in range(offspring.shape[0]):
             if offspring_fitness[offspring_idx] < average_fitness:
                 adaptive_mutation_probability = self.mutation_probability[0]
@@ -1840,7 +1840,7 @@ class GA:
                         # Selecting a value randomly from the global gene space in the 'gene_space' attribute.
                         value_from_space = random.choice(self.gene_space)
 
-                    # Assinging the selected value from the space to the gene.
+                    # Assinging the best_ind value from the space to the gene.
                     offspring[offspring_idx, gene_idx] = self.gene_type(value_from_space)
 
         return offspring
@@ -1849,8 +1849,8 @@ class GA:
 
         """
         Applies the adaptive mutation based on the 'mutation_probability' parameter.
-        Based on whether the solution fitness is above or below a threshold, the mutation is applied diffrently by mutating high or low number of genes.
-        The random values are selected based on the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
+        Based on whether the individual fitness is above or below a threshold, the mutation is applied diffrently by mutating high or low number of genes.
+        The random values are best_ind based on the 2 parameters 'random_mutation_min_val' and 'random_mutation_max_val'.
         It accepts a single parameter:
             -offspring: The offspring to mutate.
         It returns an array of the mutated offspring.
@@ -1859,7 +1859,7 @@ class GA:
         average_fitness, offspring_fitness = self.adaptive_mutation_population_fitness(offspring)
 
         # Adaptive random mutation changes one or more genes in each offspring randomly.
-        # The probability of mutating a gene depends on the solution's fitness value.
+        # The probability of mutating a gene depends on the individual's fitness value.
         for offspring_idx in range(offspring.shape[0]):
             if offspring_fitness[offspring_idx] < average_fitness:
                 adaptive_mutation_probability = self.mutation_probability[0]
@@ -1885,26 +1885,26 @@ class GA:
     def best_solution(self, pop_fitness=None):
 
         """
-        Returns information about the best solution found by the genetic algorithm.
+        Returns information about the best individual found by the genetic algorithm.
         Accepts the following parameters:
             pop_fitness: An optional parameter holding the fitness values of the solutions in the current population. If None, then the cal_pop_fitness() method is called to calculate the fitness of the population.
         The following are returned:
-            -best_solution: Best solution in the current population.
-            -best_solution_fitness: Fitness value of the best solution.
-            -best_match_idx: Index of the best solution in the current population.
+            -best_solution: Best individual in the current population.
+            -best_solution_fitness: Fitness value of the best individual.
+            -best_match_idx: Index of the best individual in the current population.
         """
 
         #        if self.generations_completed < 1:
         #            raise RuntimeError("The best_solution() method can only be called after completing at least 1 generation but ({generations_completed}) is completed.".format(generations_completed=self.generations_completed))
 
         #        if self.run_completed == False:
-        #            raise ValueError("Error calling the best_solution() method: \nThe run() method is not yet called and thus the GA did not evolve the solutions. Thus, the best solution is retireved from the initial random population without being evolved.\n")
+        #            raise ValueError("Error calling the best_solution() method: \nThe run() method is not yet called and thus the GA did not evolve the solutions. Thus, the best individual is retireved from the initial random population without being evolved.\n")
 
-        # Getting the best solution after finishing all generations.
-        # At first, the fitness is calculated for each solution in the final generation.
+        # Getting the best individual after finishing all generations.
+        # At first, the fitness is calculated for each individual in the final generation.
         if pop_fitness is None:
             pop_fitness = self.cal_pop_fitness()
-        # Then return the index of that solution corresponding to the best fitness.
+        # Then return the index of that individual corresponding to the best fitness.
         best_match_idx = numpy.where(pop_fitness == numpy.max(pop_fitness))[0][0]
 
         best_solution = self.population[best_match_idx, :].copy()

@@ -9,7 +9,7 @@ from inputs import *
 OUTPUT_FOLDER = 'output'
 POPULATION_SIZE = 20
 NUM_GENERATIONS = 100  # Number of generations.
-NUM_PARENTS_MATING = 10  # Number of solutions to be selected as parents in the mating pool.
+NUM_PARENTS_MATING = 10  # Number of solutions to be best_ind as parents in the mating pool.
 PARENT_SELECTION_TYPE = "tournament"  # Type of parent selection.
 K_TOURNAMENT = 7
 PARENTS_TO_KEEP = 7  # Number of parents to keep in the next population. -1 means keep all parents and 0 means keep nothing.
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         # After the generations complete, some plots are showed that summarize the how the outputs/fitenss values evolve over generations.
         ga_instance.plot_result(title=f"{problem.name}\nIteration vs Fitness")
 
-        # Returning the details of the best solution.
+        # Returning the details of the best individual.
         solution, solution_fitness, solution_idx = ga_instance.best_solution()
         print(f"Parameters of the best solution : {solution}")
         print(f"Fitness value of the best solution = {solution_fitness}")
