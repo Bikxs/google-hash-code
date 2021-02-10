@@ -1,29 +1,16 @@
+import os
+import sys
+import uuid
 import warnings
 from itertools import chain
 
 import pandas as pd
 
-from code_utils import make_code_zip
 from inputs import *
 
 warnings.filterwarnings("ignore")
 
-OUTPUT_FOLDER = 'output'
-
-
-def output_solution(name: Text, df_deliveries: pd.DataFrame):
-    output_filename = f"{OUTPUT_FOLDER}/{name}.out"
-    df_deliveries = df_deliveries[df_deliveries['value'] > 0]
-    points = 0
-    with open(output_filename, 'w') as the_file:
-        the_file.write(f"{len(df_deliveries)}\n")
-        for row in range(len(deliveries)):
-            team_size = df_deliveries['team_size'].iloc[row]
-            pizzas_list = df_deliveries['pizza_ids'].iloc[row]
-            points += df_deliveries['value'].iloc[row]
-            the_file.write(f'{team_size} {pizzas_list}\n')
-    print(f'\tSolution saved: {output_filename}')
-    return points
+INTERMEDIATE_FOLDER = 'intermediate'
 
 
 def print_df_head(title: string, df: pd.DataFrame, rows=5):
@@ -35,40 +22,19 @@ def print_df_head(title: string, df: pd.DataFrame, rows=5):
 
 
 if __name__ == '__main__':
-
-    make_code_zip(OUTPUT_FOLDER)
+    if (len(sys.argv) < 3):
+        print("Provide arguments")
+        exit(0)
+    filename = sys.argv[1]
+    individuals = int(sys.argv[2])
+    problem = read_problem(filename)
+    folder_name = f'{INTERMEDIATE_FOLDER}/{problem.name}/'
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
     print()
-    problems_meta = {'a': {'filename': 'a_example',
-                           'max_generations': 3,
-                           'population_size': 10,
-                           'chunk_size': 10},
-                     'b': {'filename': 'b_little_bit_of_everything.in',
-                           'max_generations': 50,
-                           'population_size': 200,
-                           'chunk_size': 40},
-                     'c': {'filename': 'c_many_ingredients.in',
-                           'max_generations': 50,
-                           'population_size': 100,
-                           'chunk_size': 500},
-                     'd': {'filename': 'd_many_pizzas.in',
-                           'max_generations': 50,
-                           'population_size': 60,
-                           'chunk_size': 200},
-                     'e': {'filename': 'e_many_teams.in',
-                           'max_generations': 50,
-                           'population_size': 50,
-                           'chunk_size': 400}}
-
-    for key, problem_meta in problems_meta.items():
-        if not key in ['a', 'b', 'c', 'd', 'e']:
-            continue
-        problem = read_problem(problem_meta['filename'])
-
-        print()
-        print(problem)
-
-        print("\tAnalysing....")
-
+    print(problem)
+    print("\tAnalysing....")
+    for ind in range(individuals):
         # load data into pandas frame
         df_pizzas = pd.DataFrame(
             [{'pizza_id': pizza.id, 'num_ingredients': pizza.number_of_ingredients, 'ingredients': pizza.ingredients,
@@ -143,15 +109,9 @@ if __name__ == '__main__':
                 df_teams.loc[(df_teams['served'] == False) & (df_teams['size'] <= remaining_pizzas), ['size']])
 
             delivery_id += 1
-
         df_deliveries = pd.DataFrame(deliveries)
         df_deliveries.set_index('delivery_id', inplace=True)
-
-        # print("Finished Deliveries")
-        # print_df_head("Pizzas", df_pizzas, 20)
-        # print_df_head("Teams", df_teams, 20)
-        # print_df_head("Deliveries", df_deliveries, 20)
-        print("\tDone.")
-        print()
-        total_points = output_solution(problem.name, df_deliveries)
-        print(f'\tTotal Points: {total_points:,}')
+        points = df_deliveries[df_deliveries['value'] > 0]['value'].sum()
+        filename = f"PROCESS_{uuid.uuid4().hex}"
+        df_deliveries.to_pickle(path=f'{folder_name}/{filename}.pickle')
+        print(f"\tGenerated individual:{ind}/{individuals} File:{filename}.pickle Points:{points}")

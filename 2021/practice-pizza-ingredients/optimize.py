@@ -5,42 +5,31 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 
-from code_utils import make_code_zip
+from utils import make_code_zip
 from inputs import *
 
-OUTPUT_FOLDER = 'output'
+INTERMEDIATE_FOLDER = 'intermediate'
 
-
-class Delivery:
-    def __init__(self, team_size: int, pizzas: List[Pizza]):
-        self.team_size = team_size
-        self.pizzas = [pizza for pizza in pizzas if pizzas != -1]
-        self.ingredients = []
-        if len(pizzas) != team_size:
-            self.value = 0
-        else:
-            for pizza in pizzas:
-                self.ingredients.extend(pizza.ingredients)
-            self.value = len(set(self.ingredients)) ** 2
-            """For each delivery, the delivery score is the square of the total number of different ingredient_types of
-            all the pizzas in the delivery
-            """
-        self.pizza_indices = [pizza.id for pizza in self.pizzas]
-
-    def __str__(self):
-        pizzas_list = ' '.join([str(pizza_index) for pizza_index in self.pizza_indices])
-        return f'{self.team_size} {pizzas_list}'
-
-
-def output_solution(name: Text, deliveries: List[Delivery]):
-    deliveries = [delivery for delivery in deliveries if delivery.team_size == len(delivery.pizzas)]
-    output_filename = f"{OUTPUT_FOLDER}/{name}.out"
-    with open(output_filename, 'w') as the_file:
-        the_file.write(f"{len(deliveries)}\n")
-        for _delivery in deliveries:
-            the_file.write(f"{_delivery}\n")
-    print(f'Solution saved {output_filename}')
-
+problems_meta = {'a': {'filename': 'a_example',
+                       'max_generations': 3,
+                       'population_size': 10,
+                       'chunk_size': 10},
+                 'b': {'filename': 'b_little_bit_of_everything.in',
+                       'max_generations': 50,
+                       'population_size': 200,
+                       'chunk_size': 40},
+                 'c': {'filename': 'c_many_ingredients.in',
+                       'max_generations': 50,
+                       'population_size': 100,
+                       'chunk_size': 500},
+                 'd': {'filename': 'd_many_pizzas.in',
+                       'max_generations': 50,
+                       'population_size': 60,
+                       'chunk_size': 200},
+                 'e': {'filename': 'e_many_teams.in',
+                       'max_generations': 50,
+                       'population_size': 50,
+                       'chunk_size': 400}}
 
 from deap import algorithms
 from deap import base

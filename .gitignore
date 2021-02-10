@@ -132,3 +132,4 @@ dmypy.json
 .idea
 *.zip
 *.out
+/2021/practice-pizza-ingredients/intermediate/
