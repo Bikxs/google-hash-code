@@ -1,8 +1,6 @@
 import warnings
 from random import sample
 
-from numpy import random
-
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
@@ -24,10 +22,10 @@ class Delivery:
             for pizza in pizzas:
                 self.ingredients.extend(pizza.ingredients)
             self.value = len(set(self.ingredients)) ** 2
-            """For each delivery, the delivery score is the square of the total number of different ingredients of
+            """For each delivery, the delivery score is the square of the total number of different ingredient_types of
             all the pizzas in the delivery
             """
-        self.pizza_indices = [pizza.index for pizza in self.pizzas]
+        self.pizza_indices = [pizza.id for pizza in self.pizzas]
 
     def __str__(self):
         pizzas_list = ' '.join([str(pizza_index) for pizza_index in self.pizza_indices])
@@ -80,7 +78,37 @@ def divide_chunks(list, chunk_size):
 
 def generate_genome(ind_cls):
     all_pizzas = [x for x in range(problem.pizza_count)]
-    return ind_cls(sample(all_pizzas, num_genes))
+    pizzas = problem.pizzas
+    """
+    if np.random.random() < .3:
+
+        current = choice(pizzas)
+        choosen = [current]
+        for x in range(num_genes):
+            unchossen = [pizza for pizza in pizzas if pizza not in choosen]
+            if len(unchossen) == 0:
+                break
+            if chunk_size < len(unchossen):
+                sampled = sample(unchossen, chunk_size)
+            else:
+                sampled = unchossen
+            matches = [
+                (pizza_differences(current.ingredient_types, sampled_pizza.ingredient_types), sampled_pizza)
+                for sampled_pizza in sampled]
+            current = matches[0][1]
+            choosen.append(current)
+        # assert len(choosen) == num_genes
+        return ind_cls([pizza.id for pizza in choosen])
+    """
+    if np.random.random() < .3:
+        # generate genome the smart way
+
+        vec = [pizza.id for pizza in pizzas]
+        ingedients = [len(pizza.ingredient_types) for pizza in pizzas]
+        p = np.array(ingedients) / sum(ingedients)
+        return ind_cls(np.random.choice(vec, num_genes, replace=False, p=p).tolist())
+    else:
+        return ind_cls(sample(all_pizzas, num_genes))
 
 
 def deliveries_from_individual(individual):
@@ -105,7 +133,7 @@ def fitness_function(individual):
     return sum(delivery.value for delivery in deliveries),
 
 
-def mutShuffleIndexes(individual, indpb, cls_img):
+def mutSwapOptimize(individual, indpb, cls_img):
     """Shuffle the attributes of the input individual and return the mutant.
     The *individual* is expected to be a :term:`sequence`. The *indpb* argument is the
     probability of each attribute to be moved. Usually this mutation is applied on
@@ -120,15 +148,16 @@ def mutShuffleIndexes(individual, indpb, cls_img):
     """
     size = len(individual)
     for i in range(size):
-        if random.random() < indpb:
-            swap_indx = random.randint(0, size)
+        if np.random.random() < indpb:
+            swap_indx = np.random.randint(0, size)
             if swap_indx == i:
                 pass
             else:
                 temp_val = individual[i]
                 individual[i] = individual[swap_indx]
                 individual[swap_indx] = temp_val
-
+    if np.random.random() < 0.8:
+        return cls_img(individual),
     # optimizaing
     deliveries = deliveries_from_individual(individual)
     chunks = divide_chunks(deliveries, chunk_size=chunk_size)
@@ -141,21 +170,22 @@ def mutShuffleIndexes(individual, indpb, cls_img):
     return cls_img(new_individual),
 
 
-def optimize_deliveries(deliveries: List[Delivery]) -> List[Delivery]:
-    def pizza_different_ingredients(ingredients1, ingredients2):
-        return len(set(ingredients1 + ingredients2))
+def pizza_differences(ingredients1, ingredients2):
+    return len(set(ingredients1 + ingredients2))
 
+
+def optimize_deliveries(deliveries: List[Delivery]) -> List[Delivery]:
     # collect all pizzas
     pizzas = {}
     for delivery in deliveries:
         for pizza in delivery.pizzas:
-            pizzas[pizza.index] = pizza
+            pizzas[pizza.id] = pizza
 
     new_deliveries = []
     # assign_pizzas into deliveries
     for delivery in deliveries:
         new_delivery_pizzas = []
-        pizza_id = random.choice([x for x in pizzas.keys()])
+        pizza_id = np.random.choice([x for x in pizzas.keys()])
         new_pizza = pizzas[pizza_id]
         del pizzas[pizza_id]
 
@@ -163,7 +193,7 @@ def optimize_deliveries(deliveries: List[Delivery]) -> List[Delivery]:
         new_delivery_pizzas_ingredients = new_pizza.ingredients.copy()
         for _ in range(len(delivery.pizzas) - 1):
             matches = [
-                (pizza_different_ingredients(new_delivery_pizzas_ingredients, remaining_pizza.ingredients), key)
+                (pizza_differences(new_delivery_pizzas_ingredients, remaining_pizza.ingredients), key)
                 for key, remaining_pizza in pizzas.items()]
             matches.sort(reverse=True)
             pizza_id = matches[0][1]
@@ -184,12 +214,12 @@ def cxCycle(ind1, ind2):
 
     _ind1_set, _ind2_set = set(ind1), set(ind2)
     intersection = list(_ind1_set & _ind2_set)
-    index_mappings = {index: ind1.index(value) for index, value in enumerate(ind2) if value in intersection}
+    index_mappings = {index: ind1.id(value) for index, value in enumerate(ind2) if value in intersection}
     in_ind1_not_in_ind2 = list(_ind1_set - _ind2_set)
     in_ind2_not_in_ind1 = list(_ind2_set - _ind1_set)
-    random.shuffle(in_ind2_not_in_ind1)
+    np.random.shuffle(in_ind2_not_in_ind1)
     differences = list(zip(in_ind1_not_in_ind2, in_ind2_not_in_ind1))
-    index_mappings.update({ind2.index(b): ind1.index(a) for a, b in differences})
+    index_mappings.update({ind2.id(b): ind1.id(a) for a, b in differences})
     # pprint(index_mappings)
     while 1:
         if idx in cycle_1:
@@ -225,23 +255,25 @@ if __name__ == '__main__':
                            'population_size': 10,
                            'chunk_size': 10},
                      'b': {'filename': 'b_little_bit_of_everything.in',
-                           'max_generations': 30,
-                           'population_size': 100,
+                           'max_generations': 50,
+                           'population_size': 200,
                            'chunk_size': 40},
                      'c': {'filename': 'c_many_ingredients.in',
-                           'max_generations': 20,
-                           'population_size': 10,
+                           'max_generations': 50,
+                           'population_size': 100,
                            'chunk_size': 500},
                      'd': {'filename': 'd_many_pizzas.in',
-                           'max_generations': 20,
-                           'population_size': 10,
+                           'max_generations': 50,
+                           'population_size': 60,
                            'chunk_size': 200},
                      'e': {'filename': 'e_many_teams.in',
-                           'max_generations': 20,
-                           'population_size': 10,
+                           'max_generations': 50,
+                           'population_size': 50,
                            'chunk_size': 400}}
 
-    for problem_meta in problems_meta.values():
+    for key, problem_meta in problems_meta.items():
+        if not key in ['b', 'c', 'd', 'e']:
+            continue
         problem = read_problem(problem_meta['filename'])
 
         print()
@@ -249,8 +281,8 @@ if __name__ == '__main__':
         NGEN = problem_meta['max_generations']
         MU = problem_meta['population_size']
         LAMBDA = MU * 2
-        CXPB = 0.2
-        MUTPB = 0.8
+        CXPB = 0.1
+        MUTPB = 0.7
         chunk_size = problem_meta['chunk_size']
         print(f"Population size: {MU}")
         num_genes = min(problem.people_count, problem.pizza_count)
@@ -267,7 +299,7 @@ if __name__ == '__main__':
         toolbox.register("evaluate", fitness_function)
         # toolbox.register("mate", tools.cxUniformPartialyMatched, indpb=0.5)
         toolbox.register("mate", cxCycle)
-        toolbox.register("mutate", mutShuffleIndexes, indpb=0.1, cls_img=creator.Individual)
+        toolbox.register("mutate", mutSwapOptimize, indpb=0.3, cls_img=creator.Individual)
         toolbox.register("select", tools.selSPEA2)
 
         # toolbox.register("select", tools.selRoulette)

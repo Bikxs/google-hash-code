@@ -5,13 +5,25 @@ INPUT_FOLDER = 'input-data'
 
 
 class Pizza:
-    def __init__(self, index: int, number_of_ingredients: int, ingredients: List[Text]):
-        self.index = index
+    def __init__(self, id: int, number_of_ingredients: int, ingredients: List[Text]):
+        self.id = id
         self.number_of_ingredients = number_of_ingredients
         self.ingredients = ingredients
 
     def __str__(self):
-        return f'{self.index} {self.number_of_ingredients} {self.ingredients}'
+        return f'{self.id} {self.number_of_ingredients} {self.ingredients}'
+
+    def __lt__(self, other):
+        return len(self.ingredients) < len(other.ingredient_types)
+
+
+class Team:
+    def __init__(self, id: int, size: int):
+        self.id = id
+        self.size = size
+
+    def __str__(self):
+        return f'{self.id} T{self.size}'
 
 
 class Problem:
@@ -25,6 +37,7 @@ class Problem:
         T4 ( 0 ≤ T 4 ≤ 50000 ) - the number of 4-person teams
         """
         self.pizzas = []
+        self.ingredient_types = list()
         i = 0
         with open(self.filename, 'r') as f:
             for line in f:
@@ -38,26 +51,28 @@ class Problem:
                     number_of_ingredients = int(line_data[0])
                     ingredients = list(line_data[1:])
                     ingredients.sort()
-                    pizza = Pizza(index=i - 1, number_of_ingredients=number_of_ingredients, ingredients=ingredients)
+                    pizza = Pizza(id=i - 1, number_of_ingredients=number_of_ingredients, ingredients=ingredients)
                     self.pizzas.append(pizza)
+                    self.ingredient_types.extend(ingredients)
                 i += 1
 
         self.teams = []
         self.team_sizes = []
         self.team_count = T2 + T3 + T4
         self.people = [x for x in range(T2 * 2 + T3 * 3 + T4 * 4)]
-        team_number = 0
-        for index, number in enumerate([T2, T3, T4]):
+        self.ingredient_types = set(self.ingredient_types)
+        team_id = 0
+        for size, number in [(2, T2), (3, T3), (4, T4)]:
             for _ in range(number):
-                self.teams.extend([team_number for _ in range(index + 2)])
-                self.team_sizes.append(index + 2)
-                team_number += 1
+                self.teams.append(Team(team_id, size))
+                self.team_sizes.append(size)
+                team_id += 1
         self.people_count = len(self.people)
         self.pizza_count = len(self.pizzas)
         self.T2, self.T3, self.T4 = T2, T3, T4
 
     def __str__(self):
-        return f'{self.filename}\n\tTeams:{self.T2}x2,{self.T3}x3,{self.T4}x4,\n\tPeople:{self.people_count}\n\tPizzas:{self.M}'
+        return f'{self.name.upper()}\n\tFilename: {self.filename}\n\tTeams: {self.T2:,}x2,{self.T3:,}x3,{self.T4:,}x4\n\t       = {self.team_count:,}\n\tPeople: {self.people_count:,}\n\tPizzas: {self.M:,}\n\tIngredients Types: {len(self.ingredient_types):,}'
 
 
 def read_problem(filename) -> Problem:
