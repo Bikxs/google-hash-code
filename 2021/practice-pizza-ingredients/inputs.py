@@ -1,7 +1,6 @@
-import string
 from typing import List, Text
 
-INPUT_FOLDER = 'input-data'
+from utils import *
 
 
 class Pizza:

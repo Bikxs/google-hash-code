@@ -1,16 +1,11 @@
-import os
 import sys
-import uuid
 import warnings
 from itertools import chain
 
-import pandas as pd
-
 from inputs import *
+from utils import *
 
 warnings.filterwarnings("ignore")
-
-INTERMEDIATE_FOLDER = 'intermediate'
 
 
 def print_df_head(title: string, df: pd.DataFrame, rows=5):
@@ -23,7 +18,7 @@ def print_df_head(title: string, df: pd.DataFrame, rows=5):
 
 if __name__ == '__main__':
     if (len(sys.argv) < 3):
-        print("Provide arguments")
+        print("Provide arguments - input_file_name and solutions_needed")
         exit(0)
     filename = sys.argv[1]
     individuals = int(sys.argv[2])
@@ -33,7 +28,9 @@ if __name__ == '__main__':
         os.makedirs(folder_name)
     print()
     print(problem)
-    print("\tAnalysing....")
+    print("\tGenerating deliveries....")
+    print()
+
     for ind in range(individuals):
         # load data into pandas frame
         df_pizzas = pd.DataFrame(
@@ -84,7 +81,7 @@ if __name__ == '__main__':
             ingredients = set(chain.from_iterable(
                 [df_pizzas_selected['ingredients'].iloc[row] for row in range(len(df_pizzas_selected))]))
             selected_pizzas = df_pizzas_selected.index.values
-
+            selected_pizzas.sort()
             """ 
             For each delivery, the delivery score is the square of the total number of different ingredient_types of
             all the pizzas in the delivery
@@ -98,6 +95,7 @@ if __name__ == '__main__':
                         'team_id': team_id,
                         'team_size': team_size,
                         'pizza_ids': selected_pizzas,
+                        'pizza_ids_sum': sum(selected_pizzas),
                         'value': value}
             deliveries.append(delivery)
 
@@ -112,6 +110,8 @@ if __name__ == '__main__':
         df_deliveries = pd.DataFrame(deliveries)
         df_deliveries.set_index('delivery_id', inplace=True)
         points = df_deliveries[df_deliveries['value'] > 0]['value'].sum()
-        filename = f"PROCESS_{uuid.uuid4().hex}"
-        df_deliveries.to_pickle(path=f'{folder_name}/{filename}.pickle')
-        print(f"\tGenerated individual:{ind}/{individuals} File:{filename}.pickle Points:{points}")
+
+        filename, points = save_deliveries_dataframe(folder=folder_name, df_deliveries=df_deliveries)
+
+        print(f"\tGenerated {ind}/{individuals} File:{filename} Points:{points:,}")
+    print(f"\tFinished {problem.name}")
