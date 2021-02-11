@@ -2,6 +2,8 @@ import sys
 import warnings
 from itertools import chain
 
+import numpy as np
+
 from inputs import *
 from utils import *
 
@@ -75,19 +77,37 @@ if __name__ == '__main__':
 
             df_pizzas_pool = df_pizzas[df_pizzas['delivered'] == False].sample(n=pool_size,
                                                                                replace=False)
+
+            selected_pizzas = []
+            selected_ingredients = []
+            for x in range(team_size):
+                all_ingedients = set(np.hstack(df_pizzas_pool['ingredients'].values)) - set(selected_ingredients)
+
+
+                def calculate_diffence(ingredients):
+                    # rem1 = all_ingedients - set(selected_ingredients)
+                    return len(all_ingedients - set(ingredients))
+
+
+                df_pizzas_pool['difference'] = df_pizzas_pool['ingredients'].apply(calculate_diffence)
+
+                df_pizzas_pool_selected = df_pizzas_pool[df_pizzas_pool['difference'] == df_pizzas_pool['difference'].min()]
+                df_pizzas_pool_selected.sort_values(by=['num_ingredients','pizza_id'], ascending=[True,True], inplace=True)
+                selected_pizzas.append(df_pizzas_pool_selected.index.values[0])
+                selected_ingredients.extend(df_pizzas_pool_selected['ingredients'].iloc[0])
+                #print_df_head("Pizza Pool Selected", df_pizzas_pool_selected, 20)
+                df_pizzas_pool = df_pizzas_pool[~df_pizzas_pool.index.isin(selected_pizzas)]
             # first_pizza = df_pizzas_pool['pizza_id', 'ingredients'].iloc[0]
             # make difference table
             df_pizzas_selected = df_pizzas_pool.iloc[:team_size]
-            ingredients = set(chain.from_iterable(
-                [df_pizzas_selected['ingredients'].iloc[row] for row in range(len(df_pizzas_selected))]))
-            selected_pizzas = df_pizzas_selected.index.values
+
             selected_pizzas.sort()
             """ 
             For each delivery, the delivery score is the square of the total number of different ingredient_types of
             all the pizzas in the delivery
             """
             if len(selected_pizzas) == team_size:
-                value = len(ingredients) ** 2
+                value = len(selected_ingredients) ** 2
             else:
                 value = 0
             # update master records

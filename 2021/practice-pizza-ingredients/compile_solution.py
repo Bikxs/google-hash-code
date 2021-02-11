@@ -1,8 +1,9 @@
-from generate import Text
+import re
+
 from utils import *
 
 
-def output_solution(name: Text, df_deliveries: pd.DataFrame):
+def output_solution(name, df_deliveries: pd.DataFrame):
     output_filename = f"{OUTPUT_FOLDER}/{name}.out"
     df_deliveries = df_deliveries[df_deliveries['value'] > 0]
     points = 0
@@ -10,8 +11,7 @@ def output_solution(name: Text, df_deliveries: pd.DataFrame):
         the_file.write(f"{len(df_deliveries)}\n")
         for row in range(len(df_deliveries)):
             team_size = df_deliveries['team_size'].iloc[row]
-            pizzas_list = df_deliveries['pizza_ids'].iloc[row]
-            pizzas_list = pizzas_list[1:-1]
+            pizzas_list = ' '.join([str(x) for x in df_deliveries['pizza_ids'].iloc[row]])
             points += df_deliveries['value'].iloc[row]
             the_file.write(f'{team_size} {pizzas_list}\n')
     return points
@@ -32,10 +32,6 @@ if __name__ == '__main__':
         solutions = []
         for file in files:
             # extract the points
-            import re
-
-            text = 'gfgfdAAA1234ZZZuijjk'
-
             m = re.search('-(.+?).csv', file)
             if m:
                 points = int(m.group(1))

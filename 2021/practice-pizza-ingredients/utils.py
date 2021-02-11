@@ -46,7 +46,12 @@ def save_deliveries_dataframe(problem_prefix, folder: string, df_deliveries: pd.
     return filename, points
 
 
+def convert_to_list(str_list):
+    return [int(x) for x in str_list[1:-1].split(' ')]
+
+
 def load_deliveries(filename):
     df_deliveries = pd.read_csv(filename)
+    df_deliveries['pizza_ids'] = df_deliveries['pizza_ids'].apply(convert_to_list)
     points = df_deliveries["value"].sum()
     return points, df_deliveries
