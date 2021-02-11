@@ -24,7 +24,7 @@ pip instal -r requirements.txt
 ## Usage
 To get to the solution for the competition- a three stage pipeline is followed.
 ### 1. Generate initial solutions
-Initial solutions are created and saved and panda dataframe (pickle format) in directory "intermediate"
+Initial solutions are created and saved and panda dataframe (CSV format) in directory "intermediate"
 The first argument is the input filename and the second (number) is the number of solutions required.
 ```sh
 python3 generate.py a_example.in 100 &

@@ -34,18 +34,19 @@ def make_code_zip(directory='output'):
     shutil.move(zip_file, directory)
 
 
-def save_deliveries_dataframe(problem_prefix,folder: string, df_deliveries: pd.DataFrame):
+def save_deliveries_dataframe(problem_prefix, folder: string, df_deliveries: pd.DataFrame):
     df_deliveries.reset_index(inplace=True, drop=True)
     df_deliveries.sort_values(by=["value", "team_id", "pizza_ids_sum"], ascending=[False, True, True], inplace=True)
     df_deliveries.reset_index(inplace=True, drop=True)
     points = df_deliveries["value"].sum()
-    hash = hashlib.sha1(df_deliveries.to_csv().encode()).hexdigest()
-    filename = f"{problem_prefix}_{hash.upper()}-{points}.pickle"
-    df_deliveries.to_pickle(path=f'{folder}/{filename}')
+    csv = df_deliveries.to_csv().encode()
+    hash = hashlib.sha1(csv).hexdigest()
+    filename = f"{problem_prefix}_{hash.upper()}-{points}.csv"
+    df_deliveries.to_csv(path_or_buf=f'{folder}/{filename}')
     return filename, points
 
 
 def load_deliveries(filename):
-    df_deliveries = pd.read_pickle(filename)
+    df_deliveries = pd.read_csv(filename)
     points = df_deliveries["value"].sum()
     return points, df_deliveries

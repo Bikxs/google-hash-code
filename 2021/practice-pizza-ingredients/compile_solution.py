@@ -11,6 +11,7 @@ def output_solution(name: Text, df_deliveries: pd.DataFrame):
         for row in range(len(df_deliveries)):
             team_size = df_deliveries['team_size'].iloc[row]
             pizzas_list = df_deliveries['pizza_ids'].iloc[row]
+            pizzas_list = pizzas_list[1:-1]
             points += df_deliveries['value'].iloc[row]
             the_file.write(f'{team_size} {pizzas_list}\n')
     return points
@@ -35,7 +36,7 @@ if __name__ == '__main__':
 
             text = 'gfgfdAAA1234ZZZuijjk'
 
-            m = re.search('-(.+?).pickle', file)
+            m = re.search('-(.+?).csv', file)
             if m:
                 points = int(m.group(1))
                 solutions.append((points, file))
