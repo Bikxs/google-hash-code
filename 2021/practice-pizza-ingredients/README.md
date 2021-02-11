@@ -38,10 +38,10 @@ python3 generate.py e_many_teams.in 100
 Using genetic algorithms below commands will optimize the initial solutions and save the new solutions also in the "intermediate" directory
 ```sh
 python3 optimize.py a_example
-python3 generate.py b_little_bit_of_everything
-python3 generate.py c_many_ingredients
-python3 generate.py d_many_pizzas
-python3 generate.py e_many_teams
+python3 optimize.py b_little_bit_of_everything
+python3 optimize.py c_many_ingredients
+python3 optimize.py d_many_pizzas
+python3 optimize.py e_many_teams
 ```
 ### 3. Generate solutions for submission
 Below command will scourge the "intermediate" directory, choose the best solution and save it in the requested format as per competions.
