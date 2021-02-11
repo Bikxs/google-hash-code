@@ -27,6 +27,7 @@ class Team:
 
 class Problem:
     def __init__(self, filename: string):
+        self.prefix = filename[0]
         self.filename = f"{INPUT_FOLDER}/{filename}"
         self.name = filename.replace(".in", "")
         """

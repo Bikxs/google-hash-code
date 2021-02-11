@@ -34,13 +34,13 @@ def make_code_zip(directory='output'):
     shutil.move(zip_file, directory)
 
 
-def save_deliveries_dataframe(folder: string, df_deliveries: pd.DataFrame):
+def save_deliveries_dataframe(problem_prefix,folder: string, df_deliveries: pd.DataFrame):
     df_deliveries.reset_index(inplace=True, drop=True)
     df_deliveries.sort_values(by=["value", "team_id", "pizza_ids_sum"], ascending=[False, True, True], inplace=True)
     df_deliveries.reset_index(inplace=True, drop=True)
     points = df_deliveries["value"].sum()
     hash = hashlib.sha1(df_deliveries.to_csv().encode()).hexdigest()
-    filename = f"SOL_{hash.upper()}-{points}.pickle"
+    filename = f"{problem_prefix}_{hash.upper()}-{points}.pickle"
     df_deliveries.to_pickle(path=f'{folder}/{filename}')
     return filename, points
 

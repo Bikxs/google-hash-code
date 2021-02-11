@@ -111,7 +111,7 @@ if __name__ == '__main__':
         df_deliveries.set_index('delivery_id', inplace=True)
         points = df_deliveries[df_deliveries['value'] > 0]['value'].sum()
 
-        filename, points = save_deliveries_dataframe(folder=folder_name, df_deliveries=df_deliveries)
+        filename, points = save_deliveries_dataframe(problem.prefix, folder=folder_name, df_deliveries=df_deliveries)
 
         print(f"\tGenerated {ind}/{individuals} File:{filename} Points:{points:,}")
     print(f"\tFinished {problem.name}")

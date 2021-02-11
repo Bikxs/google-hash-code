@@ -1,8 +1,5 @@
-from generate import INTERMEDIATE_FOLDER
 from generate import Text
 from utils import *
-
-
 
 
 def output_solution(name: Text, df_deliveries: pd.DataFrame):
@@ -23,11 +20,14 @@ if __name__ == '__main__':
     make_code_zip(OUTPUT_FOLDER)
     folders_names = ['a_example', 'b_little_bit_of_everything', 'c_many_ingredients', 'd_many_pizzas', 'e_many_teams']
     total_points = 0
+    print("----------------------------------------")
     for folder_name in folders_names:
         folder = f'{INTERMEDIATE_FOLDER}/{folder_name}'
         if not os.path.exists(folder):
             break
         files = os.listdir(folder)
+        if not files:
+            break
         solutions = []
         for file in files:
             # extract the points
@@ -47,5 +47,12 @@ if __name__ == '__main__':
         points = output_solution(folder_name, df_best_solution)
         total_points += points
         print(f'{folder_name} Points: {points:,}')
-    print()
+    print("----------------------------------------")
     print(f"Total Points: {total_points:,}")
+    print("----------------------------------------")
+    print()
+    print("You can now upload the code.zip and solutions files into the judge system")
+    print("https://hashcodejudge.withgoogle.com/#/rounds/5751229732880384/submissions/")
+    print("Good luck!!")
+
+    print("\nBikxs")
