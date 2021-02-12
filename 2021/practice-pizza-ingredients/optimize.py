@@ -43,7 +43,7 @@ def swap_pizzas(df_1, index1, index2, df_2=None):
 
     pizzas_1.append(pizza_2)
     pizzas_2.append(pizza_1)
-    if len(set(pizzas_2) - set(pizzas_1)) >0:
+    if len(set(pizzas_2) - set(pizzas_1)) > 0:
         return
     df_1['pizza_ids'].iloc[index1] = pizzas_1
     df_1['pizza_ids_sum'].iloc[index1] = sum(pizzas_1)
@@ -74,60 +74,26 @@ def mutate(ind: pd.DataFrame, mutation_probability=0.1) -> pd.DataFrame:
 
 
 def crossover_cycle(ind1: pd.DataFrame, ind2: pd.DataFrame) -> List[pd.DataFrame]:
-    child1 = ind1.copy(deep=True)
-    child2 = ind1.copy(deep=True)
-    child3 = ind2.copy(deep=True)
-    child4 = ind2.copy(deep=True)
+    children_number = 10
+    children_a = [ind1.copy(deep=True) for _ in range(children_number)]
+    children_b = [ind2.copy(deep=True) for _ in range(children_number)]
 
     team_swaps = min(len(ind1), len(ind2))
-    for i in range(team_swaps):
-        swap_pizzas(child1, i, i, child3)
-        swap_pizzas(child2, i, i, child4)
-    children = [child1, child2, child3, child4]
+
+    for ch_num in range(children_number):
+        indices_1 = sample(children_a[ch_num].index.values.tolist(), team_swaps)
+        indices_2 = sample(children_b[ch_num].index.values.tolist(), team_swaps)
+        for i in range(team_swaps):
+            swap_pizzas(children_a[ch_num], indices_1[i], indices_2[i], children_b[ch_num])
+
+    children = children_a + children_b
     return [(child['value'].sum(), child) for child in children]
 
 
-def cxCycle(ind1, ind2):
-    cycle_1 = list()
-    cycle_2 = list()
-    idx = 0
-
-    _ind1_set, _ind2_set = set(ind1), set(ind2)
-    intersection = list(_ind1_set & _ind2_set)
-    index_mappings = {index: ind1.id(value) for index, value in enumerate(ind2) if value in intersection}
-    in_ind1_not_in_ind2 = list(_ind1_set - _ind2_set)
-    in_ind2_not_in_ind1 = list(_ind2_set - _ind1_set)
-    np.random.shuffle(in_ind2_not_in_ind1)
-    differences = list(zip(in_ind1_not_in_ind2, in_ind2_not_in_ind1))
-    index_mappings.update({ind2.id(b): ind1.id(a) for a, b in differences})
-    # pprint(index_mappings)
-    while 1:
-        if idx in cycle_1:
-            break
-        cycle_1.append(idx)
-        idx = index_mappings[idx]
-    left = [i for i in range(len(ind2)) if i not in cycle_1]
-    if len(left) != 0:
-        start = min(left)
-    else:
-        return ind1, ind2
-    idx = start
-    while 1:
-        if idx in cycle_2:
-            break
-        cycle_2.append(idx)
-        idx = index_mappings[idx]
-    for i in cycle_2:
-        temp = ind2[i]
-        ind2[i] = ind1[i]
-        ind1[i] = temp
-    return ind1, ind2
-
-
-POPULATION_SIZE = 10
+POPULATION_SIZE = 100
 N_MATINGS = 40
 N_GENERATIONS = 100
-ELITE_POPULATION_TO_SAVE = POPULATION_SIZE/10
+ELITE_POPULATION_TO_SAVE = int(POPULATION_SIZE / 5)
 MUTATION_PROBABILITY = .10
 pd.options.mode.chained_assignment = None
 if __name__ == '__main__':
@@ -164,7 +130,8 @@ if __name__ == '__main__':
 
     logs = []
     for generation in range(0, N_GENERATIONS):
-        ## select
+        ## select -
+        # TODO: Change to sample by weigth
         population = population[:POPULATION_SIZE]
         ## crossovers
         for _ in range(0, N_MATINGS):
