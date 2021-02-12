@@ -43,10 +43,10 @@ if __name__ == '__main__':
 
         points = output_solution(folder_name, df_best_solution)
         total_points += points
-        print(f'{folder_name} Points: {points:,}')
-    print("----------------------------------------")
-    print(f"Total Points: {total_points:,}")
-    print("----------------------------------------")
+        print(f'{folder_name.ljust(30)} Points: {points:,}')
+    print("----------------------------------------------------------------------------")
+    print("Total Points".ljust(36), ":", f"{total_points:,}")
+    print("----------------------------------------------------------------------------")
     print()
     print("You can now upload the code.zip and solutions files into the judge system")
     print("https://hashcodejudge.withgoogle.com/#/rounds/5751229732880384/submissions/")
