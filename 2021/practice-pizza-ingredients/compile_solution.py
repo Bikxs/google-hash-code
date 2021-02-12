@@ -21,7 +21,7 @@ if __name__ == '__main__':
     make_code_zip(OUTPUT_FOLDER)
     folders_names = ['a_example', 'b_little_bit_of_everything', 'c_many_ingredients', 'd_many_pizzas', 'e_many_teams']
     total_points = 0
-    print("----------------------------------------")
+    print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
     for folder_name in folders_names:
         folder = f'{INTERMEDIATE_FOLDER}/{folder_name}'
         if not os.path.exists(folder):
@@ -39,14 +39,17 @@ if __name__ == '__main__':
             else:
                 continue
         solutions.sort(reverse=True)
-        best_solution_points, df_best_solution = load_deliveries(f'{folder}/{solutions[0][1]}')
+        filename = f'{folder}/{solutions[0][1]}'
+        best_solution_points, df_best_solution = load_deliveries(filename)
 
         points = output_solution(folder_name, df_best_solution)
         total_points += points
-        print(f'{folder_name.ljust(30)} Points: {points:,}')
-    print("----------------------------------------------------------------------------")
-    print("Total Points".ljust(36), ":", f"{total_points:,}")
-    print("----------------------------------------------------------------------------")
+        points_str = f"{points:,}".rjust(15)
+        print(f'{folder_name.upper().ljust(30)} Points: {points_str}\t{filename}')
+    print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
+    points_str = f"{total_points:,}".rjust(15)
+    print("Total Points".ljust(38), points_str)
+    print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
     print()
     print("You can now upload the code.zip and solutions files into the judge system")
     print("https://hashcodejudge.withgoogle.com/#/rounds/5751229732880384/submissions/")

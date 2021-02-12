@@ -42,17 +42,21 @@ def save_deliveries_dataframe(problem_prefix, folder: string, df_deliveries: pd.
     csv = df_deliveries.to_csv().encode()
     hash = hashlib.sha1(csv).hexdigest()
     filename = f"{problem_prefix}_{hash.upper()}-{points}.csv"
-    df_deliveries.to_csv(path_or_buf=f'{folder}/{filename}')
-    return filename, points
+    new_file = False
+    if not os.path.exists(f'{folder}/{filename}'):
+        df_deliveries.to_csv(path_or_buf=f'{folder}/{filename}')
+        new_file = True
+    return filename, points, new_file
 
 
 def convert_to_list(str_list):
-    list_str = str_list[1:-1].split(',')
+    str_list = str_list.replace(',', '')
+    list_str = str_list[1:-1].split(' ')
     return [int(x.strip()) for x in list_str]
 
 
 def load_deliveries(filename):
-    df_deliveries = pd.read_csv(filename)
+    df_deliveries = pd.read_csv(filename, index_col=0)
     df_deliveries['pizza_ids'] = df_deliveries['pizza_ids'].apply(convert_to_list)
     points = df_deliveries["value"].sum()
     return points, df_deliveries

@@ -1,199 +1,90 @@
-import warnings
-from random import sample
+import re
+import sys
+from random import choice, sample
 
-warnings.filterwarnings("ignore")
-import numpy as np
-import pandas as pd
-
-from utils import make_code_zip
-from inputs import *
-
-INTERMEDIATE_FOLDER = 'intermediate'
-
-problems_meta = {'a': {'filename': 'a_example',
-                       'max_generations': 3,
-                       'population_size': 10,
-                       'chunk_size': 10},
-                 'b': {'filename': 'b_little_bit_of_everything.in',
-                       'max_generations': 50,
-                       'population_size': 200,
-                       'chunk_size': 40},
-                 'c': {'filename': 'c_many_ingredients.in',
-                       'max_generations': 50,
-                       'population_size': 100,
-                       'chunk_size': 500},
-                 'd': {'filename': 'd_many_pizzas.in',
-                       'max_generations': 50,
-                       'population_size': 60,
-                       'chunk_size': 200},
-                 'e': {'filename': 'e_many_teams.in',
-                       'max_generations': 50,
-                       'population_size': 50,
-                       'chunk_size': 400}}
-
-from deap import algorithms
-from deap import base
-from deap import creator
-from deap import tools
 import matplotlib.pyplot as plt
+import numpy as np
 
-import multiprocessing
+from inputs import *
+from utils import *
 
 
-def plot(name, logbook):
+def plot(name, logs):
     # Genetic Algorithm is done - extract statistics:
-    max, avg, min = logbook.select("max", "avg", "min")
-
-    # plot statistics:
-    plt.figure()
-    ax = plt.subplot()
-
-    ax.plot(min, color='red', label='min')
-    ax.plot(avg, color='blue', label='avg')
-    ax.plot(max, color='green', label='max')
-    plt.xlabel('Generation')
-    plt.ylabel('Fitness')
-    plt.title(f'{name}\nFitness over Generations')
+    df_logs = pd.DataFrame(logs)
+    df_logs.set_index('generation')
+    df_logs = df_logs[['min', 'max', 'mean']]
+    ax = df_logs.plot(title=f'{name}\nFitness over Generations', xlabel='Generation', ylabel='Fitness')
     ax.legend(loc='best')
     plt.show()
 
 
-def divide_chunks(list, chunk_size):
-    # https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
-    # looping till length list
-    for i in range(0, len(list), chunk_size):
-        yield list[i:i + chunk_size]
+def fitness_function(individual: pd.DataFrame) -> int:
+    return individual['value'].sum()
 
 
-def generate_genome(ind_cls):
-    all_pizzas = [x for x in range(problem.pizza_count)]
-    pizzas = problem.pizzas
-    """
-    if np.random.random() < .3:
+# helper function to swap pizzas between teams
+def swap_pizzas(df_1, index1, index2, df_2=None):
+    if df_2 is None:
+        df_2 = df_1
 
-        current = choice(pizzas)
-        choosen = [current]
-        for x in range(num_genes):
-            unchossen = [pizza for pizza in pizzas if pizza not in choosen]
-            if len(unchossen) == 0:
-                break
-            if chunk_size < len(unchossen):
-                sampled = sample(unchossen, chunk_size)
-            else:
-                sampled = unchossen
-            matches = [
-                (pizza_differences(current.ingredient_types, sampled_pizza.ingredient_types), sampled_pizza)
-                for sampled_pizza in sampled]
-            current = matches[0][1]
-            choosen.append(current)
-        # assert len(choosen) == num_genes
-        return ind_cls([pizza.id for pizza in choosen])
-    """
-    if np.random.random() < .3:
-        # generate genome the smart way
+    pizzas_1, pizzas_2 = df_1['pizza_ids'].iloc[index1].copy(), df_2['pizza_ids'].iloc[index2].copy()
 
-        vec = [pizza.id for pizza in pizzas]
-        ingedients = [len(pizza.ingredient_types) for pizza in pizzas]
-        p = np.array(ingedients) / sum(ingedients)
-        return ind_cls(np.random.choice(vec, num_genes, replace=False, p=p).tolist())
-    else:
-        return ind_cls(sample(all_pizzas, num_genes))
+    pizza_1 = choice(pizzas_1)
+    pizzas_1.remove(pizza_1)
 
+    pizza_2 = choice(pizzas_2)
+    pizzas_2.remove(pizza_2)
 
-def deliveries_from_individual(individual):
-    people = problem.people[:num_genes]
-    teams = problem.teams[:num_genes]
+    if pizza_2 in pizzas_1:
+        return
+    if pizza_1 in pizzas_2:
+        return
 
-    data = pd.DataFrame(data={'people': people, 'teams': teams,
-                              'pizzas': individual}).set_index(
-        'people')
-    group = data.groupby(['teams']).agg(list)
-    deliveries = []
-    for team_number, row in group.iterrows():
-        team_size = problem.team_sizes[team_number]
-        team_pizzas = [problem.pizzas[int(pizza_number)] for pizza_number in row['pizzas'] if
-                       pizza_number != -1]
-        deliveries.append(Delivery(team_size, team_pizzas))
-    return deliveries
+    pizzas_1.append(pizza_2)
+    pizzas_2.append(pizza_1)
+    if len(set(pizzas_2) - set(pizzas_1)) >0:
+        return
+    df_1['pizza_ids'].iloc[index1] = pizzas_1
+    df_1['pizza_ids_sum'].iloc[index1] = sum(pizzas_1)
+    df_2['pizza_ids'].iloc[index2] = pizzas_2
+    df_2['pizza_ids_sum'].iloc[index2] = sum(pizzas_2)
+
+    ingredients1, ingredients2 = [], []
+    for pizza in pizzas_1:
+        ingredients1.extend(pizzas[pizza])
+    for pizza in pizzas_2:
+        ingredients2.extend(pizzas[pizza])
+    value_1 = len(set(ingredients1)) ** 2
+    value_2 = len(set(ingredients2)) ** 2
+    df_1['value'].iloc[index1] = value_1
+    df_2['value'].iloc[index2] = value_2
 
 
-def fitness_function(individual):
-    deliveries = deliveries_from_individual(individual)
-    return sum(delivery.value for delivery in deliveries),
+def mutate(ind: pd.DataFrame, mutation_probability=0.1) -> pd.DataFrame:
+    indices = ind.index.values.tolist()
+    for index in indices:
+        if np.random.random() <= mutation_probability:
+            index2 = choice(indices)
+            if index == index2:
+                continue
+            swap_pizzas(ind, index, index2)
+
+    return ind
 
 
-def mutSwapOptimize(individual, indpb, cls_img):
-    """Shuffle the attributes of the input individual and return the mutant.
-    The *individual* is expected to be a :term:`sequence`. The *indpb* argument is the
-    probability of each attribute to be moved. Usually this mutation is applied on
-    vector of indices.
+def crossover_cycle(ind1: pd.DataFrame, ind2: pd.DataFrame) -> List[pd.DataFrame]:
+    child1 = ind1.copy(deep=True)
+    child2 = ind1.copy(deep=True)
+    child3 = ind2.copy(deep=True)
+    child4 = ind2.copy(deep=True)
 
-    This function then optimizes the individual groupings as per pizza problem
-
-    :param individual: Individual to be mutated.
-    :param indpb: Independent probability for each attribute to be exchanged to
-                  another position.
-    :returns: A tuple of one individual.
-    """
-    size = len(individual)
-    for i in range(size):
-        if np.random.random() < indpb:
-            swap_indx = np.random.randint(0, size)
-            if swap_indx == i:
-                pass
-            else:
-                temp_val = individual[i]
-                individual[i] = individual[swap_indx]
-                individual[swap_indx] = temp_val
-    if np.random.random() < 0.8:
-        return cls_img(individual),
-    # optimizaing
-    deliveries = deliveries_from_individual(individual)
-    chunks = divide_chunks(deliveries, chunk_size=chunk_size)
-    # let optimized every 10 deliveries
-    new_individual = []
-    for chunk in chunks:
-        for delivery in optimize_deliveries(chunk):
-            new_individual.extend(delivery.pizza_indices)
-
-    return cls_img(new_individual),
-
-
-def pizza_differences(ingredients1, ingredients2):
-    return len(set(ingredients1 + ingredients2))
-
-
-def optimize_deliveries(deliveries: List[Delivery]) -> List[Delivery]:
-    # collect all pizzas
-    pizzas = {}
-    for delivery in deliveries:
-        for pizza in delivery.pizzas:
-            pizzas[pizza.id] = pizza
-
-    new_deliveries = []
-    # assign_pizzas into deliveries
-    for delivery in deliveries:
-        new_delivery_pizzas = []
-        pizza_id = np.random.choice([x for x in pizzas.keys()])
-        new_pizza = pizzas[pizza_id]
-        del pizzas[pizza_id]
-
-        new_delivery_pizzas.append(new_pizza)
-        new_delivery_pizzas_ingredients = new_pizza.ingredients.copy()
-        for _ in range(len(delivery.pizzas) - 1):
-            matches = [
-                (pizza_differences(new_delivery_pizzas_ingredients, remaining_pizza.ingredients), key)
-                for key, remaining_pizza in pizzas.items()]
-            matches.sort(reverse=True)
-            pizza_id = matches[0][1]
-            new_pizza = pizzas[pizza_id]
-            del pizzas[pizza_id]
-
-            new_delivery_pizzas.append(new_pizza)
-            new_delivery_pizzas_ingredients.extend(new_pizza.ingredients.copy())
-        new_delivery = Delivery(delivery.team_size, new_delivery_pizzas)
-        new_deliveries.append(new_delivery)
-    return new_deliveries
+    team_swaps = min(len(ind1), len(ind2))
+    for i in range(team_swaps):
+        swap_pizzas(child1, i, i, child3)
+        swap_pizzas(child2, i, i, child4)
+    children = [child1, child2, child3, child4]
+    return [(child['value'].sum(), child) for child in children]
 
 
 def cxCycle(ind1, ind2):
@@ -233,83 +124,72 @@ def cxCycle(ind1, ind2):
     return ind1, ind2
 
 
-toolbox = base.Toolbox()
-
+POPULATION_SIZE = 10
+N_MATINGS = 40
+N_GENERATIONS = 100
+ELITE_POPULATION_TO_SAVE = POPULATION_SIZE/10
+MUTATION_PROBABILITY = .10
+pd.options.mode.chained_assignment = None
 if __name__ == '__main__':
-
-    make_code_zip(OUTPUT_FOLDER)
-    print()
-    problems_meta = {'a': {'filename': 'a_example',
-                           'max_generations': 3,
-                           'population_size': 10,
-                           'chunk_size': 10},
-                     'b': {'filename': 'b_little_bit_of_everything.in',
-                           'max_generations': 50,
-                           'population_size': 200,
-                           'chunk_size': 40},
-                     'c': {'filename': 'c_many_ingredients.in',
-                           'max_generations': 50,
-                           'population_size': 100,
-                           'chunk_size': 500},
-                     'd': {'filename': 'd_many_pizzas.in',
-                           'max_generations': 50,
-                           'population_size': 60,
-                           'chunk_size': 200},
-                     'e': {'filename': 'e_many_teams.in',
-                           'max_generations': 50,
-                           'population_size': 50,
-                           'chunk_size': 400}}
-
-    for key, problem_meta in problems_meta.items():
-        if not key in ['b', 'c', 'd', 'e']:
+    if (len(sys.argv) < 2):
+        print("Provide arguments - Folder Name")
+        exit(0)
+    folder_name = sys.argv[1]
+    if (len(sys.argv) >= 3):
+        N_GENERATIONS = int(sys.argv[1])
+    folder = f'{INTERMEDIATE_FOLDER}/{folder_name}'
+    if not os.path.exists(folder):
+        print(f"Folder '{folder}' does not exist")
+        exit(0)
+    files = os.listdir(folder)
+    if not files:
+        print(f"No files found in folder '{folder}'")
+        exit(0)
+    population = []
+    for file in files:
+        # extract the points
+        m = re.search('-(.+?).csv', file)
+        if m:
+            pts, df = load_deliveries(f'{folder}/{file}')
+            population.append((pts, df))
+        else:
             continue
-        problem = read_problem(problem_meta['filename'])
+    if len(population) < POPULATION_SIZE:
+        print(f"Not enough individuals (files) in '{folder}'.\n Population of at least {POPULATION_SIZE} is needed")
+        exit(0)
+    population.sort(reverse=True, key=lambda x: x[0])
 
-        print()
-        print(problem)
-        NGEN = problem_meta['max_generations']
-        MU = problem_meta['population_size']
-        LAMBDA = MU * 2
-        CXPB = 0.1
-        MUTPB = 0.7
-        chunk_size = problem_meta['chunk_size']
-        print(f"Population size: {MU}")
-        num_genes = min(problem.people_count, problem.pizza_count)
+    problem = read_problem(f"{folder_name}.in")
+    pizzas = {pizza.id: pizza.ingredients for pizza in problem.pizzas}
 
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, fitness=creator.FitnessMax)
+    logs = []
+    for generation in range(0, N_GENERATIONS):
+        ## select
+        population = population[:POPULATION_SIZE]
+        ## crossovers
+        for _ in range(0, N_MATINGS):
+            items_to_mate = sample(population, k=2)
+            offspring = crossover_cycle(items_to_mate[0][1], items_to_mate[1][1])
+            population.extend(offspring)
 
-        pool = multiprocessing.Pool()
-        toolbox.register("map", pool.map)
-        # Structure initializers
-        toolbox.register("individual", generate_genome, creator.Individual)
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+        ## mutates
+        for fitness, individual in population:
+            mutate(individual, MUTATION_PROBABILITY)
 
-        toolbox.register("evaluate", fitness_function)
-        # toolbox.register("mate", tools.cxUniformPartialyMatched, indpb=0.5)
-        toolbox.register("mate", cxCycle)
-        toolbox.register("mutate", mutSwapOptimize, indpb=0.3, cls_img=creator.Individual)
-        toolbox.register("select", tools.selSPEA2)
+        population.sort(reverse=True, key=lambda x: x[0])
 
-        # toolbox.register("select", tools.selRoulette)
+        fitnesses = np.array([fitness for fitness, individual in population])
+        population = population[:POPULATION_SIZE]
+        # gen_number,min,max, mean,std
+        logs.append(
+            {'generation': generation, 'min': np.min(fitnesses), 'max': np.max(fitnesses), 'mean': np.mean(fitnesses),
+             'std': np.std(fitnesses)})
+        # save top X members of population
+        for points, individual in population[:ELITE_POPULATION_TO_SAVE]:
+            filename, points, new_file = save_deliveries_dataframe(problem_prefix=folder_name.lower()[0],
+                                                                   folder=folder,
+                                                                   df_deliveries=individual)
+            if new_file:
+                print(f"\t{folder_name}: New Optimized output!! {filename}:{points:,}")
 
-        pop = toolbox.population(n=MU)
-        hof = tools.ParetoFront()
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        # stats = tools.Statistics(lambda ind:fitness_function(ind))
-        stats.register("avg", np.mean, axis=0)
-        stats.register("std", np.std, axis=0)
-        stats.register("min", np.min, axis=0)
-        stats.register("max", np.max, axis=0)
-
-        pop, logbook = algorithms.eaMuPlusLambda(pop, toolbox, MU, LAMBDA, CXPB, MUTPB, NGEN, stats,
-                                                 halloffame=hof)
-        # print(hof)
-        # print(stats)
-        best_ind = tools.selBest(hof, 1)[0]
-        print(f"\tBest Individual: {best_ind}")
-        solution = deliveries_from_individual(best_ind)
-        output_solution(name=problem.name, deliveries=solution)
-        # plot chart
-        plot(problem.name, logbook=logbook)
-        # save population
+    plot(folder_name, logs)

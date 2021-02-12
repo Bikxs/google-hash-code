@@ -130,23 +130,27 @@ def strategy_random(POOL_SIZE=None):
 
 
 def pick_team():
+    strategies = {'a_example': True,
+                  'b_little_bit_of_everything': True,
+                  'c_many_ingredients': False,
+                  'd_many_pizzas': True,
+                  'e_many_teams': False}
+    random = strategies[problem.name]
     # pick random team
-    # df_team = df_teams[df_teams['served'] == False].sample(n=1, replace=False)
-
-    # pick team in order of size
-    df_team = df_teams[df_teams['served'] == False]
-    return df_team['size'].iloc[0], df_team['size'].iloc[0]
+    if random:
+        df_team = df_teams[df_teams['served'] == False].sample(n=1, replace=False)
+    else:
+        # pick team in order of size
+        df_team = df_teams[df_teams['served'] == False]
+    return df_team['size'].iloc[0], df_team.index.values[0]
 
 
 def pick_pizzas():
-    # selected_pizzas, selected_ingredients = strategy_sample_pooling_combinations()
-    # selected_pizzas, selected_ingredients = strategy_sample_pooling_combinations()
-    # return strategy_sample_pooling_sorting(POOL_SIZE=1000)
-    strategies = {'a_example': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 10},
+    strategies = {'a_example': {'fn': strategy_random, 'POOL_SIZE': None},
                   'b_little_bit_of_everything': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 50},
                   'c_many_ingredients': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
-                  'd_many_pizzas': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
-                  'e_many_teams': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30}}
+                  'd_many_pizzas': {'fn': strategy_random, 'POOL_SIZE': 30},
+                  'e_many_teams': {'fn': strategy_random, 'POOL_SIZE': 30}}
     fn = strategies[problem.name]['fn']
     POOL_SIZE = strategies[problem.name]['POOL_SIZE']
     return fn(POOL_SIZE)
@@ -235,7 +239,10 @@ if __name__ == '__main__':
         df_deliveries.set_index('delivery_id', inplace=True)
         points = df_deliveries[df_deliveries['value'] > 0]['value'].sum()
 
-        filename, points = save_deliveries_dataframe(problem.prefix, folder=folder_name, df_deliveries=df_deliveries)
-
-        print(f"\tGenerated {ind}/{individuals} File:{filename} Points:{points:,}")
+        filename, points, new_file = save_deliveries_dataframe(problem.prefix, folder=folder_name,
+                                                               df_deliveries=df_deliveries)
+        if new_file:
+            print(f"\t{folder_name}: {ind}/{individuals} Existing File Points:{points:,}")
+        else:
+            print(f"\t{folder_name}: {ind}/{individuals} ***New File** Points:{points:,}")
     print(f"\tFinished {problem.name}")
