@@ -103,11 +103,11 @@ def strategy_sample_pooling_combinations(POOL_SIZE=20):
             ingredients.extend(pizzas_dict[pizza]['ingredients'])
         ingredients_count = len(ingredients)
         unique_ingredients_count = len(set(ingredients))
-        return unique_ingredients_count - (ingredients_count - unique_ingredients_count)
+        return (ingredients_count - unique_ingredients_count), unique_ingredients_count
 
     for delivery_combination in delivery_combinations:
         delivery_combinations_score.append((calculate_score(delivery_combination), delivery_combination))
-    delivery_combinations_score.sort(reverse=True)
+    delivery_combinations_score.sort(reverse=False)
     best = delivery_combinations_score[0]
     strat_selected_pizzas = list(best[1])
     strat_selected_ingredients = []
@@ -130,27 +130,31 @@ def strategy_random(POOL_SIZE=None):
 
 
 def pick_team():
-    strategies = {'a_example': True,
-                  'b_little_bit_of_everything': True,
-                  'c_many_ingredients': False,
-                  'd_many_pizzas': True,
-                  'e_many_teams': False}
-    random = strategies[problem.name]
+    strategies = {'a_example': 'Random',
+                  'b_little_bit_of_everything': 'First',
+                  'c_many_ingredients': 'First',
+                  'd_many_pizzas': 'Last',
+                  'e_many_teams': 'Random'}
+    selection = strategies[problem.name]
+    df_team = df_teams[df_teams['served'] == False]
     # pick random team
-    if random:
-        df_team = df_teams[df_teams['served'] == False].sample(n=1, replace=False)
+    if selection == "Random":
+        df_team = df_teams.sample(n=1, replace=False)
+        index = 0
+    elif selection == "First":
+        index = 0
     else:
+        index = len(df_team) - 1
         # pick team in order of size
-        df_team = df_teams[df_teams['served'] == False]
-    return df_team['size'].iloc[0], df_team.index.values[0]
+    return df_team['size'].iloc[index], df_team.index.values[index]
 
 
 def pick_pizzas():
-    strategies = {'a_example': {'fn': strategy_random, 'POOL_SIZE': None},
+    strategies = {'a_example': {'fn': strategy_random, 'POOL_SIZE': 20},
                   'b_little_bit_of_everything': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 50},
                   'c_many_ingredients': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
-                  'd_many_pizzas': {'fn': strategy_random, 'POOL_SIZE': 30},
-                  'e_many_teams': {'fn': strategy_random, 'POOL_SIZE': 30}}
+                  'd_many_pizzas': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
+                  'e_many_teams': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30}}
     fn = strategies[problem.name]['fn']
     POOL_SIZE = strategies[problem.name]['POOL_SIZE']
     return fn(POOL_SIZE)
@@ -241,8 +245,8 @@ if __name__ == '__main__':
 
         filename, points, new_file = save_deliveries_dataframe(problem.prefix, folder=folder_name,
                                                                df_deliveries=df_deliveries)
-        if new_file:
-            print(f"\t{folder_name}: {ind}/{individuals} Existing File Points:{points:,}")
+        if not new_file:
+            print(f"\t{problem.name.upper()}: {ind}/{individuals} Existing File Points:{points:,}")
         else:
-            print(f"\t{folder_name}: {ind}/{individuals} ***New File** Points:{points:,}")
+            print(f"\t{problem.name.upper()}: {ind}/{individuals} NEW FILE !!!! Points:{points:,}  *************")
     print(f"\tFinished {problem.name}")

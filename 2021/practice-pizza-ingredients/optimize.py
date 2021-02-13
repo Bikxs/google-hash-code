@@ -29,22 +29,21 @@ def swap_pizzas(df_1, index1, index2, df_2=None):
         df_2 = df_1
 
     pizzas_1, pizzas_2 = df_1['pizza_ids'].iloc[index1].copy(), df_2['pizza_ids'].iloc[index2].copy()
-
-    pizza_1 = choice(pizzas_1)
+    intersection = set(pizzas_1).intersection(set(pizzas_2))
+    selection_1 = list(set(pizzas_1) - intersection)
+    selection_2 = list(set(pizzas_2) - intersection)
+    if not selection_1:
+        return
+    if not selection_2:
+        return
+    pizza_1 = choice(selection_1)
     pizzas_1.remove(pizza_1)
 
-    pizza_2 = choice(pizzas_2)
+    pizza_2 = choice(selection_2)
     pizzas_2.remove(pizza_2)
-
-    if pizza_2 in pizzas_1:
-        return
-    if pizza_1 in pizzas_2:
-        return
 
     pizzas_1.append(pizza_2)
     pizzas_2.append(pizza_1)
-    if len(set(pizzas_2) - set(pizzas_1)) > 0:
-        return
     df_1['pizza_ids'].iloc[index1] = pizzas_1
     df_1['pizza_ids_sum'].iloc[index1] = sum(pizzas_1)
     df_2['pizza_ids'].iloc[index2] = pizzas_2
@@ -74,7 +73,7 @@ def mutate(ind: pd.DataFrame, mutation_probability=0.1) -> pd.DataFrame:
 
 
 def crossover_cycle(ind1: pd.DataFrame, ind2: pd.DataFrame) -> List[pd.DataFrame]:
-    children_number = 10
+    children_number = 20
     children_a = [ind1.copy(deep=True) for _ in range(children_number)]
     children_b = [ind2.copy(deep=True) for _ in range(children_number)]
 
@@ -87,7 +86,7 @@ def crossover_cycle(ind1: pd.DataFrame, ind2: pd.DataFrame) -> List[pd.DataFrame
             swap_pizzas(children_a[ch_num], indices_1[i], indices_2[i], children_b[ch_num])
 
     children = children_a + children_b
-    return [(child['value'].sum(), child) for child in children]
+    return pd.DataFrame([(child['value'].sum(), child) for child in children], columns=['value', 'df'])
 
 
 POPULATION_SIZE = 100
@@ -102,7 +101,7 @@ if __name__ == '__main__':
         exit(0)
     folder_name = sys.argv[1]
     if (len(sys.argv) >= 3):
-        N_GENERATIONS = int(sys.argv[1])
+        POPULATION_SIZE = int(sys.argv[2])
     folder = f'{INTERMEDIATE_FOLDER}/{folder_name}'
     if not os.path.exists(folder):
         print(f"Folder '{folder}' does not exist")
@@ -121,9 +120,10 @@ if __name__ == '__main__':
         else:
             continue
     if len(population) < POPULATION_SIZE:
-        print(f"Not enough individuals (files) in '{folder}'.\n Population of at least {POPULATION_SIZE} is needed")
+        print(
+            f"Not enough individuals (files) in '{folder}'.\n Population of at least {POPULATION_SIZE} is needed, but {len(population)} found")
         exit(0)
-    population.sort(reverse=True, key=lambda x: x[0])
+    population = pd.DataFrame(population, columns=['value', 'df'])
 
     problem = read_problem(f"{folder_name}.in")
     pizzas = {pizza.id: pizza.ingredients for pizza in problem.pizzas}
@@ -131,32 +131,37 @@ if __name__ == '__main__':
     logs = []
     for generation in range(0, N_GENERATIONS):
         ## select -
-        # TODO: Change to sample by weigth
-        population = population[:POPULATION_SIZE]
+        population = population.sample(n=POPULATION_SIZE, weights='value')
+        population.sort_values(['value'], ascending=[False], inplace=True)
+        # population.reset_index(inplace=True, drop=True)
+        # print(population.head(10))
         ## crossovers
         for _ in range(0, N_MATINGS):
-            items_to_mate = sample(population, k=2)
-            offspring = crossover_cycle(items_to_mate[0][1], items_to_mate[1][1])
-            population.extend(offspring)
+            items_to_mate = population.sample(n=2)
+            offspring = crossover_cycle(items_to_mate['df'].iloc[0], items_to_mate['df'].iloc[1])
+            population.append(offspring, ignore_index=True)
+        population.reset_index(inplace=True, drop=True)
 
         ## mutates
-        for fitness, individual in population:
+        for index in population.index.values:
+            individual = population['df'].iloc[index]
             mutate(individual, MUTATION_PROBABILITY)
 
-        population.sort(reverse=True, key=lambda x: x[0])
-
-        fitnesses = np.array([fitness for fitness, individual in population])
-        population = population[:POPULATION_SIZE]
+        population.sort_values(['value'], ascending=[False], inplace=True)
+        fitnesses = population['value'].tolist()
+        # population = population[:POPULATION_SIZE]
         # gen_number,min,max, mean,std
         logs.append(
             {'generation': generation, 'min': np.min(fitnesses), 'max': np.max(fitnesses), 'mean': np.mean(fitnesses),
              'std': np.std(fitnesses)})
+        # print(population.head(10))
         # save top X members of population
-        for points, individual in population[:ELITE_POPULATION_TO_SAVE]:
+        for row in population[:ELITE_POPULATION_TO_SAVE].index.values:
+            individual = population['df'].iloc[row]
             filename, points, new_file = save_deliveries_dataframe(problem_prefix=folder_name.lower()[0],
                                                                    folder=folder,
                                                                    df_deliveries=individual)
             if new_file:
-                print(f"\t{folder_name}: New Optimized output!! {filename}:{points:,}")
+                print(f"\t{folder_name.upper()}: New Optimized output!! {filename}:{points:,}")
 
     plot(folder_name, logs)

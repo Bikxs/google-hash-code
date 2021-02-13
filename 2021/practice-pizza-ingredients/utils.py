@@ -52,7 +52,7 @@ def save_deliveries_dataframe(problem_prefix, folder: string, df_deliveries: pd.
 def convert_to_list(str_list):
     str_list = str_list.replace(',', '')
     list_str = str_list[1:-1].split(' ')
-    return [int(x.strip()) for x in list_str]
+    return [int(x.strip()) for x in list_str if x != '']
 
 
 def load_deliveries(filename):
