@@ -34,15 +34,14 @@ def make_code_zip(directory='output'):
     shutil.move(zip_file, directory)
 
 
-def save_schedules_dataframe(problem_prefix, folder: string, df_schedules: pd.DataFrame):
+def save_schedules_dataframe(problem_prefix, folder: string, points, df_schedules: pd.DataFrame):
     df_schedules.sort_values(by=["intersection_id"], ascending=[True], inplace=True)
-    points = 0
     csv = df_schedules.to_csv().encode()
     hash = hashlib.sha1(csv).hexdigest()
-    filename = f"{problem_prefix}_{hash.upper()}-{points}.csv"
+    filename = f"{problem_prefix}_{hash.upper()}-{points}.pickle"
     new_file = False
     if not os.path.exists(f'{folder}/{filename}'):
-        df_schedules.to_csv(path_or_buf=f'{folder}/{filename}')
+        df_schedules.to_pickle(path=f'{folder}/{filename}')
         new_file = True
     return filename, points, new_file
 
@@ -53,8 +52,8 @@ def convert_to_list(str_list):
     return [int(x.strip()) for x in list_str if x != '']
 
 
-def load_deliveries(filename):
-    df_deliveries = pd.read_csv(filename, index_col=0)
-    df_deliveries['pizza_ids'] = df_deliveries['pizza_ids'].apply(convert_to_list)
-    points = df_deliveries["value"].sum()
-    return points, df_deliveries
+def load_schedules(filename):
+    df_schedules = pd.read_pickle(filename)
+    # df_schedules['green_lights'] = df_schedules['green_lights'].apply(convert_to_list)
+    points = 0
+    return points, df_schedules

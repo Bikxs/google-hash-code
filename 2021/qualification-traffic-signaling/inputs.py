@@ -98,8 +98,8 @@ class Problem:
             if street.end not in intersections_data:
                 intersections_data[street.end] = {'incoming': [], 'outgoing': []}
 
-            intersections_data[street.begin]['incoming'].append(street.street_name)
-            intersections_data[street.end]['outgoing'].append(street.street_name)
+            intersections_data[street.end]['incoming'].append(street.street_name)
+            intersections_data[street.begin]['outgoing'].append(street.street_name)
         for id, data in intersections_data.items():
             self.intersections.append(Intersection(intersection_id=id, incoming_streets=list(set(data['incoming'])),
                                                    outgoing_streets=list(set(data['outgoing']))))

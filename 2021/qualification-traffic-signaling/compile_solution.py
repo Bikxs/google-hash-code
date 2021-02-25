@@ -5,7 +5,6 @@ from utils import *
 
 def output_solution(name, df_schedules: pd.DataFrame):
     output_filename = f"{OUTPUT_FOLDER}/{name}.out"
-    df_schedules = df_schedules[df_schedules['value'] > 0]
     points = 0
     with open(output_filename, 'w') as the_file:
         """
@@ -14,7 +13,7 @@ def output_solution(name, df_schedules: pd.DataFrame):
         """
         the_file.write(f"{len(df_schedules)}\n")
         for row in range(len(df_schedules)):
-            intersection_id =df_schedules['intersection_id'].iloc[row]
+            intersection_id =df_schedules.index[row]
             number_of_incoming_streets_covered=df_schedules['number_of_incoming_streets_covered'].iloc[row]
             green_lights=df_schedules['green_lights'].iloc[row]
             """
@@ -34,18 +33,14 @@ def output_solution(name, df_schedules: pd.DataFrame):
             ○ an integer T ( 1 ≤ T ≤ D ) – for how long each street will have a green
             light.
             """
-
-
-            team_size = df_schedules['team_size'].iloc[row]
-            pizzas_list = ' '.join([str(x) for x in df_schedules['pizza_ids'].iloc[row]])
-            points += df_schedules['value'].iloc[row]
-            the_file.write(f'{team_size} {pizzas_list}\n')
+            for street_name,duration in green_lights:
+                the_file.write(f'{street_name} {duration}\n')
     return points
 
 
 if __name__ == '__main__':
     make_code_zip(OUTPUT_FOLDER)
-    folders_names = ['a_example', 'b_little_bit_of_everything', 'c_many_ingredients', 'd_many_pizzas', 'e_many_teams']
+    folders_names = ['a_example', 'b_by_the_ocean', 'c_checkmate', 'd_daily_commute', 'e_etoile','f_forever_jammed']
     total_points = 0
     print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
     for folder_name in folders_names:
@@ -58,7 +53,7 @@ if __name__ == '__main__':
         solutions = []
         for file in files:
             # extract the points
-            m = re.search('-(.+?).csv', file)
+            m = re.search('-(.+?).pickle', file)
             if m:
                 points = int(m.group(1))
                 solutions.append((points, file))
@@ -66,7 +61,7 @@ if __name__ == '__main__':
                 continue
         solutions.sort(reverse=True)
         filename = f'{folder}/{solutions[0][1]}'
-        best_solution_points, df_best_solution = load_deliveries(filename)
+        best_solution_points, df_best_solution = load_schedules(filename)
 
         points = output_solution(folder_name, df_best_solution)
         total_points += points
@@ -78,7 +73,7 @@ if __name__ == '__main__':
     print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
     print()
     print("You can now upload the code.zip and solutions files into the judge system")
-    print("https://hashcodejudge.withgoogle.com/#/rounds/5751229732880384/submissions/")
+    print("https://hashcodejudge.withgoogle.com/#/rounds/5879728443490304/submissions/")
     print("Good luck!!")
 
     print("\nBikxs")

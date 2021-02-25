@@ -115,7 +115,7 @@ if __name__ == '__main__':
         # extract the points
         m = re.search('-(.+?).csv', file)
         if m:
-            pts, df = load_deliveries(f'{folder}/{file}')
+            pts, df = load_schedules(f'{folder}/{file}')
             population.append((pts, df))
         else:
             continue
