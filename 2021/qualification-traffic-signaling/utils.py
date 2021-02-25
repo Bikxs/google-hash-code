@@ -21,8 +21,8 @@ def make_code_zip(directory='output'):
         os.remove(zip_file)
     shutil.copytree("./", CODE_FOLDER)
     os.remove(f"{CODE_FOLDER}/problem_statement.pdf")
-    # if os.schedule.exists(f"{CODE_FOLDER}/{INPUT_FOLDER}"):
-    #     shutil.rmtree(f"{CODE_FOLDER}/{INPUT_FOLDER}")
+    if os.path.exists(f"{CODE_FOLDER}/{INPUT_FOLDER}"):
+        shutil.rmtree(f"{CODE_FOLDER}/{INPUT_FOLDER}")
     if os.path.exists(f"{CODE_FOLDER}/{INTERMEDIATE_FOLDER}"):
         shutil.rmtree(f"{CODE_FOLDER}/{INTERMEDIATE_FOLDER}")
     if os.path.exists(f"{CODE_FOLDER}/__pycache__"):
@@ -34,17 +34,15 @@ def make_code_zip(directory='output'):
     shutil.move(zip_file, directory)
 
 
-def save_deliveries_dataframe(problem_prefix, folder: string, df_deliveries: pd.DataFrame):
-    df_deliveries.reset_index(inplace=True, drop=True)
-    df_deliveries.sort_values(by=["value", "team_id", "pizza_ids_sum"], ascending=[False, True, True], inplace=True)
-    df_deliveries.reset_index(inplace=True, drop=True)
-    points = df_deliveries["value"].sum()
-    csv = df_deliveries.to_csv().encode()
+def save_schedules_dataframe(problem_prefix, folder: string, df_schedules: pd.DataFrame):
+    df_schedules.sort_values(by=["intersection_id"], ascending=[True], inplace=True)
+    points = 0
+    csv = df_schedules.to_csv().encode()
     hash = hashlib.sha1(csv).hexdigest()
     filename = f"{problem_prefix}_{hash.upper()}-{points}.csv"
     new_file = False
     if not os.path.exists(f'{folder}/{filename}'):
-        df_deliveries.to_csv(path_or_buf=f'{folder}/{filename}')
+        df_schedules.to_csv(path_or_buf=f'{folder}/{filename}')
         new_file = True
     return filename, points, new_file
 

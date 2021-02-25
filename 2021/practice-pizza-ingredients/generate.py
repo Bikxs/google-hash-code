@@ -17,8 +17,8 @@ def print_df_head(title: string, df: pd.DataFrame, rows=5):
     print()
 
 
-def strategy_sorting_looping(POOL_SIZE=None):
-    df_pizzas_pool = df_pizzas[df_pizzas['delivered'] == False]
+def strategy_sorting_looping(POOL_SIZE=1000):
+    df_pizzas_pool = df_pizzas[df_pizzas['delivered'] == False].sample(n=POOL_SIZE, weights='num_ingredients')
     strat_selected_pizzas = []
     strat_selected_ingredients = []
     start_pizza = 0
@@ -132,9 +132,9 @@ def strategy_random(POOL_SIZE=None):
 def pick_team():
     strategies = {'a_example': 'Random',
                   'b_little_bit_of_everything': 'First',
-                  'c_many_ingredients': 'First',
-                  'd_many_pizzas': 'Last',
-                  'e_many_teams': 'Random'}
+                  'c_many_ingredients': 'Last',
+                  'd_many_pizzas': 'Random',
+                  'e_many_teams': 'Last'}
     selection = strategies[problem.name]
     df_team = df_teams[df_teams['served'] == False]
     # pick random team
@@ -151,10 +151,10 @@ def pick_team():
 
 def pick_pizzas():
     strategies = {'a_example': {'fn': strategy_random, 'POOL_SIZE': 20},
-                  'b_little_bit_of_everything': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 50},
-                  'c_many_ingredients': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
-                  'd_many_pizzas': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
-                  'e_many_teams': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30}}
+                  'b_little_bit_of_everything': {'fn': strategy_sample_pooling_combinations, 'POOL_SIZE': 30},
+                  'c_many_ingredients': {'fn': strategy_sorting_looping, 'POOL_SIZE': 500},
+                  'd_many_pizzas': {'fn': strategy_sorting_looping, 'POOL_SIZE': 1000},
+                  'e_many_teams': {'fn': strategy_sorting_looping, 'POOL_SIZE': 500}}
     fn = strategies[problem.name]['fn']
     POOL_SIZE = strategies[problem.name]['POOL_SIZE']
     return fn(POOL_SIZE)

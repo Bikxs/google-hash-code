@@ -21,7 +21,7 @@ def make_code_zip(directory='output'):
         os.remove(zip_file)
     shutil.copytree("./", CODE_FOLDER)
     os.remove(f"{CODE_FOLDER}/hashcode_delivery_instructions.pdf")
-    # if os.path.exists(f"{CODE_FOLDER}/{INPUT_FOLDER}"):
+    # if os.schedule.exists(f"{CODE_FOLDER}/{INPUT_FOLDER}"):
     #     shutil.rmtree(f"{CODE_FOLDER}/{INPUT_FOLDER}")
     if os.path.exists(f"{CODE_FOLDER}/{INTERMEDIATE_FOLDER}"):
         shutil.rmtree(f"{CODE_FOLDER}/{INTERMEDIATE_FOLDER}")
