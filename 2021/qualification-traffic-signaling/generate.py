@@ -45,7 +45,11 @@ class Simulation(object):
                     car_status['next_junction']= next_intersection
                     car_status['at_next_junction_time_step']= at_next_junction_time_step
                     car_status['current_street_name']= current_street_name
-        #update street intersection status
+
+        # update street intersection status
+        for intersection in self.problem.intersections:
+            self.intersections[intersection.intersection_id] = {street: {'queue': [], 'light': 'RED'} for street in
+                                                                intersection.incoming_street_names}
 
 
 
