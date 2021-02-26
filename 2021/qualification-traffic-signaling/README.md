@@ -1,6 +1,6 @@
 <h1 align="center">
 
-Even more pizza
+Traffic signaling
 
 </h1>
 <p>
@@ -9,14 +9,14 @@ Even more pizza
 <a href="https://twitter.com/Bikxs" target="_blank"><img alt="Twitter: Bikxs" src="https://img.shields.io/twitter/follow/Bikxs.svg?style=social" /></a>
 </p>
 
-> Hash Code practice problem
+> Hash Code 2021, qualification round problem
 
 
 ## Install
 Create a conda enviroment and install the python libraries listed in requirements.txt
 ```sh
-conda create -n env_more_pizza python=3.7
-conda activate env_more_pizza
+conda create -n hashcode_env python=3.7
+conda activate hashcode_env
 pip instal -r requirements.txt
 
 ```
@@ -24,7 +24,7 @@ pip instal -r requirements.txt
 ## Usage
 To get to the solution for the competition- a three stage pipeline is followed.
 ### 1. Generate initial solutions
-Initial solutions are created and saved and panda dataframe (CSV format) in directory "intermediate"
+Initial solutions are created and saved and panda dataframe (Pickle format) in directory "intermediate"
 The first argument is the input filename and the second (number) is the number of solutions required.
 ```sh
 python3 generate.py a_example.txt 100 &

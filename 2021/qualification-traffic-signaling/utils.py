@@ -46,14 +46,7 @@ def save_schedules_dataframe(problem_prefix, folder: string, points, df_schedule
     return filename, points, new_file
 
 
-def convert_to_list(str_list):
-    str_list = str_list.replace(',', '')
-    list_str = str_list[1:-1].split(' ')
-    return [int(x.strip()) for x in list_str if x != '']
-
 
 def load_schedules(filename):
     df_schedules = pd.read_pickle(filename)
-    # df_schedules['green_lights'] = df_schedules['green_lights'].apply(convert_to_list)
-    points = 0
-    return points, df_schedules
+    return df_schedules

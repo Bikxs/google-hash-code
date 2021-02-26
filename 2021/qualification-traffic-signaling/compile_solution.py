@@ -13,9 +13,9 @@ def output_solution(name, df_schedules: pd.DataFrame):
         """
         the_file.write(f"{len(df_schedules)}\n")
         for row in range(len(df_schedules)):
-            intersection_id =df_schedules.index[row]
-            number_of_incoming_streets_covered=df_schedules['number_of_incoming_streets_covered'].iloc[row]
-            green_lights=df_schedules['green_lights'].iloc[row]
+            intersection_id = df_schedules.index[row]
+            number_of_incoming_streets_covered = df_schedules['number_of_incoming_streets_covered'].iloc[row]
+            green_lights = df_schedules['green_lights'].iloc[row]
             """
             ● the rst line containing a single integer i (0 ≤ i < I ) – the ID of the
             intersection,
@@ -33,16 +33,24 @@ def output_solution(name, df_schedules: pd.DataFrame):
             ○ an integer T ( 1 ≤ T ≤ D ) – for how long each street will have a green
             light.
             """
-            for street_name,duration in green_lights:
+            green_lights_output = []
+
+            for street_name, data in green_lights.items():
+                if data['duration'] > 0:
+                    green_lights_output.append((data['start'], data['end'], data['duration'], street_name))
+
+            green_lights_output.sort()
+            for start, end, duration, street_name in green_lights_output:
                 the_file.write(f'{street_name} {duration}\n')
     return points
 
 
 if __name__ == '__main__':
     make_code_zip(OUTPUT_FOLDER)
-    folders_names = ['a_example', 'b_by_the_ocean', 'c_checkmate', 'd_daily_commute', 'e_etoile','f_forever_jammed']
+    folders_names = ['a_example', 'b_by_the_ocean', 'c_checkmate', 'd_daily_commute', 'e_etoile', 'f_forever_jammed']
     total_points = 0
-    print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
+    print(
+        "--------------------------------------------------------------------------------------------------------------------------------------------------------")
     for folder_name in folders_names:
         folder = f'{INTERMEDIATE_FOLDER}/{folder_name}'
         if not os.path.exists(folder):
@@ -61,16 +69,18 @@ if __name__ == '__main__':
                 continue
         solutions.sort(reverse=True)
         filename = f'{folder}/{solutions[0][1]}'
-        best_solution_points, df_best_solution = load_schedules(filename)
+        df_best_solution = load_schedules(filename)
 
-        points = output_solution(folder_name, df_best_solution)
+        output_solution(folder_name, df_best_solution)
         total_points += points
         points_str = f"{points:,}".rjust(15)
         print(f'{folder_name.upper().ljust(30)} Points: {points_str}\t{filename}')
-    print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
+    print(
+        "--------------------------------------------------------------------------------------------------------------------------------------------------------")
     points_str = f"{total_points:,}".rjust(15)
     print("Total Points".ljust(38), points_str)
-    print("--------------------------------------------------------------------------------------------------------------------------------------------------------")
+    print(
+        "--------------------------------------------------------------------------------------------------------------------------------------------------------")
     print()
     print("You can now upload the code.zip and solutions files into the judge system")
     print("https://hashcodejudge.withgoogle.com/#/rounds/5879728443490304/submissions/")

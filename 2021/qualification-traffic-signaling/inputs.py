@@ -7,6 +7,10 @@ class Street:
         self.end = end
         self.street_name = street_name
         self.length = length
+        self.cars = {}
+
+    def step(self):
+        pass
 
     def __str__(self):
         return f'{self.street_name} {self.begin}-> {self.end} {self.length} secs'
@@ -22,11 +26,41 @@ class Path:
         return f'{self.car_id} Streets: {self.number_of_streets_traversed}'
 
 
+class Car:
+    def __init__(self, path):
+        self.car_id = path.car_id
+        self.path = path
+        self.finished = False
+
+    def step(self):
+        pass
+
+
+GREEN = 'green'
+RED = 'red'
+
+
+class Light():
+    def __init__(self, street, intersection):
+        self.street = street
+        self.intersection = intersection
+        self.queue = []
+        self.color = 'RED'
+
+    def step(self):
+        pass
+
+
 class Intersection:
     def __init__(self, intersection_id, incoming_streets, outgoing_streets):
         self.intersection_id = intersection_id
         self.incoming_street_names = incoming_streets
         self.outgoing_street_names = outgoing_streets
+        self.lights = [Light(street, self) for street in self.incoming_street_names]
+        self.schedule = []
+
+    def step(self):
+        pass
 
     def __str__(self):
         return f'{self.intersection_id} Incoming Streets: {self.incoming_street_names} Outgoing Streets: {self.outgoing_street_names}'

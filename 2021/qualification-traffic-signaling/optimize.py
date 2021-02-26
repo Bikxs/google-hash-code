@@ -113,10 +113,11 @@ if __name__ == '__main__':
     population = []
     for file in files:
         # extract the points
-        m = re.search('-(.+?).csv', file)
+        m = re.search('-(.+?).pickle', file)
         if m:
-            pts, df = load_schedules(f'{folder}/{file}')
-            population.append((pts, df))
+            points = int(m.group(1))
+            df = load_schedules(f'{folder}/{file}')
+            population.append((points, df))
         else:
             continue
     if len(population) < POPULATION_SIZE:
