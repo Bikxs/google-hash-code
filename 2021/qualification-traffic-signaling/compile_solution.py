@@ -77,11 +77,12 @@ if __name__ == '__main__':
 
         output_solution(folder_name, df_best_solution)
         total_points += points
-        points_str = f"{points:,}".rjust(15)
-        print(f'{folder_name.upper().ljust(30)} Points: {points_str}\t{filename}')
+        solutions_str = f"{len(solutions):,}".rjust(4)
+        points_str = f"{points:,}".rjust(10)
+        print(f'{folder_name.upper().ljust(20)} Solutions: {solutions_str}\tPoints: {points_str}\t{filename}')
     print(
         "--------------------------------------------------------------------------------------------------------------------------------------------------------")
-    points_str = f"{total_points:,}".rjust(15)
+    points_str = f"{total_points:,}".rjust(19)
     print("Total Points".ljust(38), points_str)
     print(
         "--------------------------------------------------------------------------------------------------------------------------------------------------------")
