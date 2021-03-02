@@ -2,6 +2,7 @@ import math
 import random
 import sys
 import warnings
+from datetime import datetime
 
 from inputs import *
 from simulation import Simulation
@@ -20,22 +21,51 @@ def print_df_head(title: string, df: pd.DataFrame, rows=5):
 
 def strategy_round_robin() -> Dict[int, Schedule]:
     _schedules = {}
+
+    street_traffic = {street_name: 0 for street_name, street in problem.streets.items()}
+    for _, path in problem.paths.items():
+        for streat_name in path.street_names:
+            street_traffic[streat_name] += 1
     for intersection_id in problem.intersections:
         intersection = problem.intersections[intersection_id]
-        streets = intersection.incoming_street_names
-        random.shuffle(streets)
-        green_lights = {}
-        time = 1
-        for street in streets:
-            duration = 1 + random.randint(0, 1)
-            green_lights[street.street_name] = {'start': time,
-                                                'end': time + duration,
-                                                'duration': duration}
-            time += duration
+        streets = intersection.incoming_street_names.copy()
 
-        schedule = Schedule(intersection_id=intersection.intersection_id,
-                            green_lights=green_lights)
-        _schedules[intersection_id] = schedule
+        random.shuffle(streets)
+        # streets.sort(reverse=True)
+        total_cars = sum([street_traffic[street] for street in streets])
+        if total_cars > 0:
+            def timing(streetname):
+                if street_traffic[streetname] == 0:
+                    return 0
+                return 1  # + random.randint(0, 2)  # round_time / len(streets)
+
+                # return int(
+                #     math.ceil(
+                #         (street_traffic[streetname] / total_cars) * round_time))
+
+            green_lights = {}
+            time = 0
+            for street in streets:
+                duration = timing(street)
+                green_lights[street] = {'start': time,
+                                        'end': time + duration,
+                                        'duration': duration}
+                time += duration
+
+            schedule = Schedule(intersection_id=intersection.intersection_id,
+                                green_lights=green_lights)
+            _schedules[intersection_id] = schedule
+    return _schedules
+
+
+def strategy_example_a() -> Dict[int, Schedule]:
+    _schedules = {
+        1: Schedule(1, green_lights={'rue-d-athenes': {'start': 0, 'end': 2, 'duration': 2},
+                                     'rue-d-amsterdam': {'start': 2, 'end': 3,
+                                                         'duration': 1}}),
+        0: Schedule(0, green_lights={'rue-de-londres': {'start': 0, 'end': 2, 'duration': 2}}),
+        2: Schedule(2, green_lights={'rue-de-moscou': {'start': 0, 'end': 1, 'duration': 1}}),
+    }
     return _schedules
 
 
@@ -49,7 +79,7 @@ def strategy_by_number_of_cars() -> Dict[int, Schedule]:
     for intersection_id in problem.intersections:
         intersection = problem.intersections[intersection_id]
         streets = intersection.incoming_street_names.copy()
-        round_time = min(random.randint(len(streets), math.ceil(len(streets) * 2.5)), problem.simulation_duration)
+        round_time = min(random.randint(len(streets) * 2, math.ceil(len(streets) * 4)), 10, problem.simulation_duration)
         random.shuffle(streets)
         total_cars = sum([street_traffic[street] for street in streets])
         if total_cars > 0:
@@ -65,10 +95,57 @@ def strategy_by_number_of_cars() -> Dict[int, Schedule]:
                 green_lights[street] = {'start': time,
                                         'end': time + duration,
                                         'duration': duration}
+                # if duration > 0:
+                #     duration += random.randint(-duration, int(round_time / 2))
                 time += duration
 
             schedule = Schedule(intersection_id=intersection.intersection_id,
                                 green_lights=green_lights)
+            _schedules[intersection_id] = schedule
+    return _schedules
+
+
+def strategy_by_number_of_cars_ignore_long_trips() -> Dict[int, Schedule]:
+    _schedules = {}
+
+    street_traffic = {street_name: 0 for street_name, street in problem.streets.items()}
+    for car_id in problem.paths:
+        path = problem.paths[car_id]
+        path.length = sum([problem.streets[street_name].length for street_name in path.street_names])
+    paths_list = [(path.length, random.random(), path) for car_id, path in problem.paths.items()]
+    paths_list.sort()
+    # paths = {path.car_id:path for _,path in paths_list}
+    for _, _, path in paths_list[:int(math.ceil(len(paths_list) * .8))]:
+        for streat_name in path.street_names:
+            street_traffic[streat_name] += 1
+    for intersection_id in problem.intersections:
+        intersection = problem.intersections[intersection_id]
+        streets = intersection.incoming_street_names.copy()
+        round_time = min(random.randint(len(streets) * 4, math.ceil(len(streets) * 8)), 10, problem.simulation_duration)
+        random.shuffle(streets)
+        total_cars = sum([street_traffic[street] for street in streets])
+        if total_cars > 0:
+            def timing(streetname):
+                return int(
+                    math.ceil(
+                        (street_traffic[streetname] / total_cars) * round_time))
+
+            green_lights = {}
+            time = 0
+            for street in streets:
+                duration = timing(street)
+                if duration == 0:
+                    duration = 1
+                green_lights[street] = {'start': time,
+                                        'end': time + duration,
+                                        'duration': duration}
+                # if duration > 0:
+                #     duration += random.randint(-duration, int(round_time / 2))
+                time += duration
+
+            schedule = Schedule(intersection_id=intersection.intersection_id,
+                                green_lights=green_lights)
+
             _schedules[intersection_id] = schedule
     return _schedules
 
@@ -93,10 +170,16 @@ if __name__ == '__main__':
     print()
 
     for ind in range(individuals):
-        if random.random() < 0.3:
-            schedules = strategy_round_robin()
-        else:
-            schedules = strategy_by_number_of_cars()
+        # schedules = strategy_round_robin()
+
+        seed = datetime.now()
+        random.seed(seed)
+        # current date and time
+
+        # schedules = strategy_round_robin()
+        # schedules = strategy_by_number_of_cars()
+        schedules = strategy_by_number_of_cars_ignore_long_trips()
+        # schedules = strategy_example_a()
         points = Simulation(problem, schedules).score
         df_schedules = pd.DataFrame(
             [{'intersection_id': schedule.intersection_id,

@@ -20,6 +20,9 @@ class PathInfo:
         self.number_of_streets_traversed = number_of_streets_traversed
         self.street_names = street_names
 
+    def __lt__(self, other):
+        return len(self.street_names) < len(other.street_names)
+
     def __str__(self):
         return f'{self.car_id} Streets: {self.number_of_streets_traversed}'
 
@@ -60,9 +63,10 @@ class Schedule:
 
 
 class Problem:
-    streets:Dict[str, StreetInfo]
+    streets: Dict[str, StreetInfo]
     paths: Dict[int, PathInfo]
     intersections: Dict[int, IntersectionInfo]
+
     def __init__(self, filename: string):
         self.prefix = filename[0]
         self.filename = f"{INPUT_FOLDER}/{filename}"

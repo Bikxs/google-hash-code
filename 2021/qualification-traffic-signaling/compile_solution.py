@@ -1,3 +1,4 @@
+import random
 import re
 
 from utils import *
@@ -21,7 +22,6 @@ def output_solution(name, df_schedules: pd.DataFrame):
             intersection,
             """
             the_file.write(f'{intersection_id}\n')
-
 
             green_lights_output = []
 
@@ -57,10 +57,10 @@ if __name__ == '__main__':
     for folder_name in folders_names:
         folder = f'{INTERMEDIATE_FOLDER}/{folder_name}'
         if not os.path.exists(folder):
-            break
+            continue
         files = os.listdir(folder)
         if not files:
-            break
+            continue
         solutions = []
         for file in files:
             # extract the points
@@ -71,8 +71,9 @@ if __name__ == '__main__':
             else:
                 continue
         solutions.sort(reverse=True)
-        filename = f'{folder}/{solutions[0][1]}'
-        points = solutions[0][0]
+        solution = random.choice(solutions[:10])
+        filename = f'{folder}/{solution[1]}'
+        points = solution[0]
         df_best_solution = load_schedules(filename)
 
         output_solution(folder_name, df_best_solution)
@@ -88,7 +89,8 @@ if __name__ == '__main__':
         "--------------------------------------------------------------------------------------------------------------------------------------------------------")
     print()
     print("You can now upload the code.zip and solutions files into the judge system")
-    print("https://hashcodejudge.withgoogle.com/#/rounds/5879728443490304/submissions/")
+    # print("https://hashcodejudge.withgoogle.com/#/rounds/5879728443490304/submissions/")
+    print("https://hashcodejudge.withgoogle.com/#/rounds/5977771406786560/submissions/")
     print("Good luck!!")
 
     print("\nBikxs")
