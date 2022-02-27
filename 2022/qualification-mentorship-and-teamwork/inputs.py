@@ -1,25 +1,13 @@
-from typing import Dict, List
-
 from utils import *
 
 
-class Skill:
-    def __init__(self, name: str, level: int):
-        self.name = name
-        self.level = level
-
-    def __repr__(self):
-        return f'{self.name} L{self.level}'
-
-
 class Contributor:
-    def __init__(self, name: str, skills: List[Skill]):
+    def __init__(self, name: str, skills):
         self.name = name
-        self.skills = skills
-
+        self.skills = {skill: level for (skill, level) in skills}
 
     def __repr__(self):
-        return f'{self.name}: {self.skills}'
+        return f'{self.name}: {len(self.skills)}'
 
 
 class Project:
@@ -27,19 +15,32 @@ class Project:
                  duration: int,
                  score: int,
                  best_before: int,
-                 roles: List[Skill]):
+                 roles):
         self.name = name  # its name
-        self.roles = roles
+        self.roles = [(skill, level) for (skill, level) in roles]
         self.duration = duration  # duration of the project in days (how long it takes to complete a project once it is started)
         self.score = score  # the score awarded for completing the project
         self.best_before = best_before  # if the project last day of work is strictly before the indicated day, it earns the full score. If it’s late (that is, the project is still worked on during or after its "best before day"), it gets one point less for each day it is late, but no less than zero points
+        self.scored = 0
 
     def __repr__(self):
-        return f'{self.name} duration:{self.duration} score:{self.score} best_before:{self.best_before} roles:{self.roles}'
-    def work_a_day(self):
-        self.days_worked += 1
-        if self.days_worked >= self.duration:
-            self.completed = True
+        return f'{self.name} duration:{self.duration} score:{self.score} best_before:{self.best_before} roles:{len(self.roles)}'
+
+    def complete(self, day):
+        self.scored = 0
+        best_before = self.best_before
+        project_score = self.score
+        if best_before >= day:
+            scored = project_score
+        else:
+            days_late = (day + 1) - best_before
+            scored = project_score - days_late
+            if scored < 0:
+                scored = 0
+        # print(f"Project {self.name} completed, scored={scored}")
+        self.scored = scored
+        return scored
+
 
 class Problem:
     contributor: Dict[str, Contributor]
@@ -65,7 +66,7 @@ class Problem:
             linenumber += 1
             contributor_skills = []
             for _ in range(contributor_skills_count):
-                skill = Skill(lines[linenumber][0], int(lines[linenumber][1]))
+                skill = (lines[linenumber][0], int(lines[linenumber][1]))
                 contributor_skills.append(skill)
                 linenumber += 1
             contributor = Contributor(contributor_name, contributor_skills)
@@ -80,7 +81,7 @@ class Problem:
             linenumber += 1
             roles = []
             for _ in range(number_of_roles):
-                role = Skill(lines[linenumber][0], int(lines[linenumber][1]))
+                role = (lines[linenumber][0], int(lines[linenumber][1]))
                 roles.append(role)
                 linenumber += 1
             project = Project(name=project_name,
@@ -89,8 +90,19 @@ class Problem:
                               best_before=best_before,
                               roles=roles)
             self.projects[project_name] = project
+        skills = []
+        for name, project in self.projects.items():
+            for role_name,_  in project.roles:
+                skills.append(role_name)
+        skills = list(set(skills))
 
-        self.available_time = max([project.best_before  + project.score for name,project in self.projects.items()])
+        for contributor_name, contributor in self.contributors.items():
+            for skill in skills:
+                if skill not in contributor.skills.keys():
+                    self.contributors[contributor_name].skills[skill] = 0
+                    # pass
+        self.available_time = max([project.best_before + project.score for name, project in self.projects.items()])
+
     def __str__(self):
         return f'{self.name.upper()}\n\tnumber_of_contributors: {self.number_of_contributors}\n\tnumber_of_projects: {self.number_of_projects}'
 

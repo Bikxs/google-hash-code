@@ -24,8 +24,20 @@ def output_solution(name, assignmets:Dict):
 
     return points
 
+def tally():
+    results = [
+        1238926,
+        41223,
+        5425,
+        54835,
+        310676,
+        33
+    ]
+    print(sum(results))
 
 if __name__ == '__main__':
+    # tally()
+    # exit()
     make_code_zip(OUTPUT_FOLDER)
     folders_names = ['a_an_example.in', 'b_better_start_small.in', 'c_collaboration.in', 'd_dense_schedule.in', 'e_exceptional_skills.in', 'f_find_great_mentors.in']
     total_points = 0
@@ -48,7 +60,7 @@ if __name__ == '__main__':
             else:
                 continue
         solutions.sort(reverse=True)
-        solution = random.choice(solutions[:10])
+        solution = random.choice(solutions[:1])
         filename = f'{folder}/{solution[1]}'
         points = solution[0]
         df_best_solution = load_assignment(filename)
@@ -67,7 +79,8 @@ if __name__ == '__main__':
     print()
     print("You can now upload the code.zip and solutions files into the judge system")
     # print("https://hashcodejudge.withgoogle.com/#/rounds/5879728443490304/submissions/")
-    print("https://hashcodejudge.withgoogle.com/#/rounds/5977771406786560/submissions/")
+    # print("https://hashcodejudge.withgoogle.com/#/rounds/5977771406786560/submissions/")
+    print("https://codingcompetitions.withgoogle.com/hashcode/round/00000000008caae7/000000000098afc8")
     print("Good luck!!")
 
     print("\nBikxs")

@@ -3,6 +3,8 @@ import sys
 import warnings
 from datetime import datetime
 
+import simpy
+
 from inputs import *
 from utils import *
 
@@ -17,56 +19,51 @@ class Solution:
         self.contributor_assignment = {name: None for name, contributor in problem.contributors.items()}
         self.projects = problem.projects
         self.assignments = assignments  # project_name,[contributor_name]
+        self.projects = problem.projects
+        self.assignments = assignments
 
+    @property
     def score(self):
-        score = 0
-        final_assignments = []
-        for day in range(self.problem.available_time):
-            for project_name, assignments in self.assignments:
-                # project = self.projects[project_name]
-                if self.projects_status[project_name] == "completed":
-                    continue
-                if self.projects_status[project_name] == "started":
-                    self.projects_days_worked[project_name] = self.projects_days_worked[project_name] + 1
-                    if self.projects_days_worked[project_name] >= self.projects[project_name].duration:
-                        self.projects_status[project_name] = "completed"
-                    if self.projects_status[project_name] == "completed":
-                        # release the workers
-                        for worker_name in assignments:
-                            self.contributor_assignment[worker_name] = None
-                        # take the score
-                        best_before = self.projects[project_name].best_before
-                        project_score = self.projects[project_name].score
-                        if best_before >= day:
-                            scored = project_score
+        return sum([project.scored for _, project in self.projects.items()])
 
-                        else:
-                            days_late = (day + 1) - best_before
-                            scored = project_score - days_late
-                            if scored < 0:
-                                scored = 0
-                        if scored > 0:
-                            final_assignments.append((project_name,assignments))
-                            score += scored
-                else:
-                    # try to start the project
-                    read_to_start = True
-                    for worker_name in assignments:
-                        if self.contributor_assignment[worker_name] == None:
-                            self.contributor_assignment[worker_name] = project_name
-                        elif self.contributor_assignment[worker_name] == project_name:
-                            continue
-                        else:
-                            # worker assigned to another project
-                            read_to_start = False
-                    if read_to_start:
-                        self.projects_status[project_name] = "started"
-                        if day == 0:
-                            self.projects_days_worked[project_name] = self.projects_days_worked[project_name] + 1
-        return score,final_assignments
+    def evaluate(self):
+        env = simpy.Environment()
+        contributors = []
+
+        for project_name, assignment in self.assignments:
+            # project_name = assignment[0]
+            contributors.extend(assignment)
+        contributors = list(set(contributors))
+        contributor_resources = {contributor: simpy.Resource(env=env) for contributor in contributors}
+
+        def project_process_gen(project: Project, contributors):
+
+            # wait for the contributors
+            resources = [contributor_resources[contributor] for contributor in contributors]
+            requests = [resource.request() for resource in resources]
+            # print(f"{env.now} Project {project.name} waiting for contributors {contributors}")
+            for request in requests:
+                yield request
+            # print(f"{env.now} Project {project.name} started {contributors}")
+            yield env.timeout(project.duration)
+            # print(f"{env.now} Project {project.name} completed.",end=' ')
+            # project.complete(env.now)
+            for resource, request in zip(resources, requests):
+                # release the resources
+                resource.release(request)
+            score = project.complete(env.now - 1)
+            # print(f" Score: {score}")
+            yield env.timeout(0)
+
+        for project_name, contributors in self.assignments:
+            project = self.projects[project_name]
+            env.process(project_process_gen(project, contributors))
+            # self.score += self.score
+        env.run(until=problem.available_time + 10)
+        return self.score
 
 
-def gen_solution_assinment():
+def gen_solution_a_text_book():
     return [("WebServer", ["Bob", "Anna"]),
             ("Logging", ["Anna"]),
             ("WebChat", ["Maria", "Bob"])]
@@ -79,20 +76,31 @@ def gen_random_assignments(problem):
     assignments = []
     for project in projects:
         assignment = []
-        for role in project.roles:
+        for (role_name, role_level) in project.roles:
             assigned = False
-            avalailable_contributors = [contributor for contributor in contributors if contributor not in assignment]
+            avalailable_contributors = [contributor for contributor in contributors if
+                                        contributor not in assignment and contributor.skills[role_name] >= role_level]
             random.shuffle(avalailable_contributors)
             for contributor in avalailable_contributors:
-                for skill in contributor.skills:
-                    if skill.name == role.name and skill.level >= role.level:
+                skill_level = contributor.skills[role_name]
+                if (skill_level >= role_level):
+                    if contributor.name in assignment:
+                        pass
+                    else:
                         assignment.append(contributor.name)
+                        if len(assignment) != len(set(assignment)):
+                            print("A contributer has been assigned to same project twice")
                         assigned = True
-                        continue
-                if assigned:
-                    continue
+                        break
+            if assigned:
+                continue
         if len(assignment) == len(project.roles):
             assignments.append((project.name, assignment))
+
+
+
+
+
     return assignments
 
 
@@ -120,9 +128,11 @@ if __name__ == '__main__':
         seed = datetime.now()
         random.seed(seed)
 
-        assignments = gen_random_assignments(problem)
+        # assignments = gen_solution_a_text_book()# gen_random_assignments(problem)
+        assignments =  gen_random_assignments(problem)
         solution = Solution(problem, assignments=assignments)
-        score,final_assignments = solution.score()
-        save_assignments_dict(problem.prefix, folder=folder_name, points=score, assignments=final_assignments)
-        # print(f"Score = {solution.score()}")
+        score = solution.evaluate()
+        save_assignments_dict(problem.prefix, folder=folder_name, points=score, assignments=assignments)
+        print(f"Score = {score}")
+        break
     print(f"\tFinished {problem.name}")
